@@ -1,0 +1,73 @@
+import React, { useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../redux/store';
+import { fetchPrograms } from '../../redux/dataSlice';
+import { lightTheme } from '../../theme/theme';
+import { MentorProgramListCard } from './components';
+
+const MentorProgramListScreen = ({ navigation, route }: any) => {
+    const { student } = route.params;
+    const programs = useSelector((state: RootState) => state.data.program);
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        dispatch(fetchPrograms());
+    }, [dispatch]);
+
+    const studentPrograms = programs
+        .filter(p => p.student.id === student.id)
+        .sort((a, b) => {
+             // Sort by scheduledDate desc, then title
+             if (a.scheduledDate && b.scheduledDate) return b.scheduledDate.localeCompare(a.scheduledDate);
+             return 0;
+        });
+
+    const handleEditTask = (task: any) => {
+        navigation.navigate('Assign Tasks', { student, task });
+    };
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Tasks for {student.name}</Text>
+            </View>
+
+            <FlatList
+                data={studentPrograms}
+                keyExtractor={item => item.id}
+                ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>No tasks assigned.</Text></View>}
+                renderItem={({ item }) => (
+                    <MentorProgramListCard item={item} onPress={handleEditTask} />
+                )}
+                contentContainerStyle={{ paddingBottom: 20 }}
+            />
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: lightTheme.colors.background,
+    },
+    header: {
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: lightTheme.colors.text,
+    },
+    empty: {
+        marginTop: 50,
+        alignItems: 'center',
+    },
+    emptyText: {
+        color: '#999',
+        fontSize: 16,
+    },
+});
+
+export default MentorProgramListScreen;
