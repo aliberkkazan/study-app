@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Button } from '@/components';
 import { lightTheme } from '../../theme/theme';
 
 const FOCUS_TIME = 25 * 60; // 25 minutes
@@ -57,18 +58,27 @@ const PomodoroScreen = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: mode === 'focus' ? '#FFF0F0' : '#F0FFF0' }]}>
+        <View style={[styles.container]}>
             <Text style={styles.title}>{mode === 'focus' ? 'Focus Time' : 'Break Time'}</Text>
             <Text style={styles.timer}>{formatTime(timeLeft)}</Text>
 
             <View style={styles.controls}>
-                <TouchableOpacity style={styles.button} onPress={toggleTimer}>
-                    <Text style={styles.buttonText}>{isActive ? 'Pause' : 'Start'}</Text>
-                </TouchableOpacity>
+                <Button
+                    mode="contained"
+                    onPress={toggleTimer}
+                    style={styles.buttonSpy}
+                >
+                    {isActive ? 'Pause' : 'Start'}
+                </Button>
 
-                <TouchableOpacity style={[styles.button, styles.resetButton]} onPress={resetTimer}>
-                    <Text style={styles.buttonText}>Reset</Text>
-                </TouchableOpacity>
+                <Button
+                    mode="contained"
+                    onPress={resetTimer}
+                    buttonColor={lightTheme.colors.tertiary as string}
+                    style={styles.buttonSpy}
+                >
+                    Reset
+                </Button>
             </View>
 
             <View style={styles.logContainer}>
@@ -106,19 +116,8 @@ const styles = StyleSheet.create({
         gap: 20,
         marginTop: 40,
     },
-    button: {
-        backgroundColor: lightTheme.colors.primary,
-        paddingVertical: 12,
-        paddingHorizontal: 32,
-        borderRadius: 24,
-    },
-    resetButton: {
-        backgroundColor: lightTheme.colors.secondary,
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: '600',
+    buttonSpy: {
+        minWidth: 120,
     },
     logContainer: {
         marginTop: 40,

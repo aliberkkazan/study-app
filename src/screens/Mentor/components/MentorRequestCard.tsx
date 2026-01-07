@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Button } from '@/components';
 import { lightTheme } from '../../../theme/theme';
 import { format } from 'date-fns';
 
@@ -7,7 +8,7 @@ interface MentorRequestCardProps {
     item: {
         id: string;
         student: { name: string };
-        createdAt: string;
+        created_at: string;
     };
     onApprove: (id: string) => void;
     onReject: (id: string) => void;
@@ -18,21 +19,25 @@ export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onAp
         <View style={styles.card}>
             <View style={styles.info}>
                 <Text style={styles.name}>{item.student.name || 'Unknown User'}</Text>
-                <Text style={styles.date}>Requested: {format(new Date(item.createdAt), 'MMM dd, yyyy')}</Text>
+                <Text style={styles.date}>Requested: {format(new Date(item.created_at), 'MMM dd, yyyy')}</Text>
             </View>
             <View style={styles.actions}>
-                <TouchableOpacity
-                    style={[styles.button, styles.rejectButton]}
+                <Button
+                    mode="contained"
+                    buttonColor="#FF3B30"
                     onPress={() => onReject(item.id)}
+                    compact
                 >
-                    <Text style={styles.buttonText}>Reject</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.button, styles.approveButton]}
+                    Reject
+                </Button>
+                <Button
+                    mode="contained"
+                    buttonColor="#34C759"
                     onPress={() => onApprove(item.id)}
+                    compact
                 >
-                    <Text style={styles.buttonText}>Approve</Text>
-                </TouchableOpacity>
+                    Approve
+                </Button>
             </View>
         </View>
     );
@@ -48,7 +53,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: lightTheme.colors.border,
+        borderColor: lightTheme.colors.gray, // Fixed border color
     },
     info: {
         flex: 1,
@@ -67,20 +72,5 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 10,
     },
-    button: {
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-    },
-    approveButton: {
-        backgroundColor: '#34C759', // Green
-    },
-    rejectButton: {
-        backgroundColor: '#FF3B30', // Red
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-    },
+    // Removed unused button styles
 });

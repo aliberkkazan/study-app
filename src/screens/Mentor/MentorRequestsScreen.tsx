@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { fetchConnectionRequests, respondToConnectionRequest } from '../../redux/dataSlice';
@@ -30,14 +30,17 @@ export const MentorRequestsScreen = () => {
                 <FlatList
                     data={connectionRequests}
                     renderItem={({ item }) => (
-                         <MentorRequestCard 
-                            item={item} 
-                            onApprove={handleApprove} 
-                            onReject={handleReject} 
-                         />
+                        <MentorRequestCard
+                            item={item}
+                            onApprove={handleApprove}
+                            onReject={handleReject}
+                        />
                     )}
                     keyExtractor={item => item.id}
                     ListEmptyComponent={<Text style={styles.emptyText}>No pending requests.</Text>}
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={() => dispatch(fetchConnectionRequests())} />
+                    }
                 />
             )}
         </View>

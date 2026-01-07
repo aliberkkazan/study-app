@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Button } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store';
 import { logout } from '../../redux/authSlice';
-import { lightTheme } from '../../theme/theme';
+import { darkTheme, lightTheme } from '../../theme/theme';
 
 const RoleSelectionScreen = ({ navigation }: any) => {
     const dispatch = useDispatch();
@@ -16,26 +16,31 @@ const RoleSelectionScreen = ({ navigation }: any) => {
         <View style={styles.container}>
             <Text style={styles.title}>Welcome Admin</Text>
             <Text style={styles.subtitle}>Select a role to continue:</Text>
-            
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity 
-                    style={[styles.button, { backgroundColor: lightTheme.colors.primary }]}
-                    onPress={() => navigation.navigate('StudentHome')}
-                >
-                    <Text style={styles.buttonText}>Student View</Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.button, { backgroundColor: lightTheme.colors.secondary }]}
-                    onPress={() => navigation.navigate('MentorHome')}
+            <View style={styles.buttonContainer}>
+                <Button
+                    onPress={() => navigation.navigate('StudentHome')}
+                    style={styles.button}
                 >
-                    <Text style={styles.buttonText}>Mentor View</Text>
-                </TouchableOpacity>
+                    Student View
+                </Button>
+
+                <Button
+                    onPress={() => navigation.navigate('MentorHome')}
+                    style={styles.button}
+                >
+                    Mentor View
+                </Button>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+            <Button
+                mode="text"
+                textColor="red"
+                onPress={handleLogout}
+                style={styles.logoutButton}
+            >
+                Logout
+            </Button>
         </View>
     );
 };
@@ -66,30 +71,10 @@ const styles = StyleSheet.create({
     },
     button: {
         width: '100%',
-        padding: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     logoutButton: {
-        padding: 10,
+        padding: 0,
     },
-    logoutText: {
-        color: 'red',
-        fontSize: 16,
-    }
 });
 
 export default RoleSelectionScreen;

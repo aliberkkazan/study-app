@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
+import { Button } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { addProgramItem, updateProgramItem } from '../../redux/dataSlice';
@@ -20,6 +21,7 @@ const EditProgramScreen = ({ navigation, route }: any) => {
 
     const dispatch = useDispatch<AppDispatch>();
     const user = useSelector((state: RootState) => state.auth.user);
+    const { loading } = useSelector((state: RootState) => state.data);
 
     useEffect(() => {
         if (task) {
@@ -99,9 +101,14 @@ const EditProgramScreen = ({ navigation, route }: any) => {
         <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.headerRow}>
                 <Text style={styles.title}>{isEditMode ? 'Edit Task' : `Assign to ${student.name}`}</Text>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
+                <Button
+                    mode="text"
+                    onPress={handleLogout}
+                    compact
+                    textColor={lightTheme.colors.danger as string}
+                >
+                    Logout
+                </Button>
             </View>
 
             <View style={styles.form}>
@@ -127,7 +134,7 @@ const EditProgramScreen = ({ navigation, route }: any) => {
                     <Text style={styles.label}>Set Schedule & Due Date</Text>
                     <Switch
                         value={isScheduled}
-                        thumbColor={lightTheme.colors.primary}
+                        thumbColor={lightTheme.colors.primary as string}
                         trackColor={{ true: 'red', false: 'gray' }}
                         ios_backgroundColor="gray"
                         onValueChange={setIsScheduled}
@@ -154,14 +161,24 @@ const EditProgramScreen = ({ navigation, route }: any) => {
                     </>
                 )}
                 {isEditMode && (
-                    <TouchableOpacity style={[styles.button, styles.cancelBtn]} onPress={handleCancel}>
-                        <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
-                    </TouchableOpacity>
+                    <Button
+                        mode="outlined"
+                        onPress={handleCancel}
+                        style={styles.marginTop}
+                    >
+                        Cancel
+                    </Button>
                 )}
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleSaveTask}>
-                <Text style={styles.buttonText}>{isEditMode ? 'Update Task' : 'Assign Task'}</Text>
-            </TouchableOpacity>
+            <Button
+                mode="contained"
+                onPress={handleSaveTask}
+                loading={loading}
+                disabled={loading}
+                style={styles.marginTop}
+            >
+                {isEditMode ? 'Update Task' : 'Assign Task'}
+            </Button>
         </ScrollView>
     );
 };
@@ -187,7 +204,7 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     logoutText: {
-        color: lightTheme.colors.notification,
+        color: lightTheme.colors.danger,
         fontWeight: '600',
     },
     form: {
@@ -207,7 +224,7 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: lightTheme.colors.border,
+        borderColor: lightTheme.colors.gray, // Replaced non-existent border with gray
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
@@ -217,25 +234,8 @@ const styles = StyleSheet.create({
         height: 100,
         textAlignVertical: 'top',
     },
-    button: {
-        backgroundColor: lightTheme.colors.primary,
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
+    marginTop: {
         marginTop: 16,
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    cancelBtn: {
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: lightTheme.colors.border,
-    },
-    cancelText: {
-        color: lightTheme.colors.text,
     },
 });
 

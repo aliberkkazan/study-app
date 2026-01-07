@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { Button } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../../redux/authSlice';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -13,8 +14,8 @@ const LoginScreen = ({ navigation }: any) => {
 
     const handleLogin = () => {
         // Simple client-side validation
-        if(!email.trim() || !password.trim()) return;
-        
+        if (!email.trim() || !password.trim()) return;
+
         // Dispatch async login
         dispatch(loginUser({ email: email.trim(), password: password.trim() }));
     };
@@ -22,21 +23,21 @@ const LoginScreen = ({ navigation }: any) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Study App</Text>
-            
+
             <View style={styles.inputContainer}>
-                <TextInput 
-                    style={styles.input} 
-                    placeholder="Email" 
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email"
                     placeholderTextColor="#999"
                     value={email}
                     onChangeText={setEmail}
                     autoCapitalize="none"
                 />
-                <TextInput 
-                    style={styles.input} 
-                    placeholder="Password" 
+                <TextInput
+                    style={styles.input}
+                    placeholder="Password"
                     placeholderTextColor="#999"
-                    secureTextEntry 
+                    secureTextEntry
                     value={password}
                     onChangeText={setPassword}
                 />
@@ -44,17 +45,17 @@ const LoginScreen = ({ navigation }: any) => {
 
             {error && <Text style={styles.errorText}>{error}</Text>}
 
-            <TouchableOpacity 
-                style={styles.button} 
+            {error && <Text style={styles.errorText}>{error}</Text>}
+
+            <Button
+                mode="contained"
                 onPress={handleLogin}
+                loading={loading}
                 disabled={loading}
+                style={styles.button}
             >
-                {loading ? (
-                    <ActivityIndicator color="#FFF" />
-                ) : (
-                    <Text style={styles.buttonText}>Login</Text>
-                )}
-            </TouchableOpacity>
+                Login
+            </Button>
         </View>
     );
 };
@@ -94,16 +95,7 @@ const styles = StyleSheet.create({
     },
     button: {
         width: '100%',
-        height: 50,
-        backgroundColor: lightTheme.colors.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '600',
+        marginTop: 10,
     },
 });
 

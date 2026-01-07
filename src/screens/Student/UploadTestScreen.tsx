@@ -1,47 +1,69 @@
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-// import { launchImageLibrary } from 'react-native-image-picker'; 
-import { AppDispatch, RootState } from '../../redux/store';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { Button } from '@/components';
 import { addSubmission } from '../../redux/dataSlice';
 import { lightTheme } from '../../theme/theme';
 
 const UploadTestScreen = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state: any) => state.auth) || {};
+    const { loading } = useSelector((state: any) => state.data);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const handleSelectImage = async () => {
-        // Mocking Image Picker for now as native modules require linking
-        // In real app:
-        // const result = await launchImageLibrary({ mediaType: 'photo' });
-        // if (result.assets) setSelectedImage(result.assets[0].uri);
+        const result = await launchImageLibrary({
+            mediaType: 'photo',
+            includeBase64: true,
+            quality: 0.5,
+        });
 
-        // Mock:
-        setSelectedImage('https://via.placeholder.com/300');
-        Alert.alert('Mock Image Selected', 'A placeholder image has been selected for demonstration.');
+        if (result.didCancel) {
+            return;
+        }
+
+        if (result.errorCode) {
+            Alert.alert('Error', result.errorMessage);
+            return;
+        }
+
+        if (result.assets && result.assets.length > 0) {
+            const asset = result.assets[0];
+            if (asset.base64 && asset.type) {
+                const base64Image = `data:${asset.type};base64,${asset.base64}`;
+                setSelectedImage(base64Image);
+            } else {
+                Alert.alert('Error', 'Could not process image');
+            }
+        }
     };
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!selectedImage) {
             Alert.alert('Error', 'Please select an image first');
             return;
         }
 
-        const studentId = user?.id || '1bf5ad6b-ad4d-456b-8509-ca3215417600'; // Fallback to existing user for demo
+        const studentId = user?.id; // Use real user ID
 
-        dispatch(addSubmission({
-            // id: Date.now().toString(), // Removed mock ID
-            // studentId: 'student1',
-            studentId,
-            imageUrl: selectedImage,
-            // timestamp: new Date().toISOString(),
-            // status: 'pending',
-        }) as any); // Type assertion if needed, but thunk should handle it.
+        if (!studentId) {
+            Alert.alert('Error', 'User validation failed');
+            return;
+        }
 
-        setSelectedImage(null);
-        Alert.alert('Success', 'Test page uploaded for review');
+        try {
+            await dispatch(addSubmission({
+                studentId,
+                imageUrl: selectedImage,
+            }) as any).unwrap();
+
+            setSelectedImage(null);
+            Alert.alert('Success', 'Submission uploaded successfully');
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to upload');
+        }
     };
 
     return (
@@ -57,18 +79,24 @@ const UploadTestScreen = () => {
                     </View>
                 )}
 
-                <TouchableOpacity style={styles.selectButton} onPress={handleSelectImage}>
-                    <Text style={styles.buttonText}>Select Page Photo</Text>
-                </TouchableOpacity>
+                <Button
+                    mode="contained"
+                    onPress={handleSelectImage}
+                    style={styles.selectButton}
+                >
+                    Select Page Photo
+                </Button>
             </View>
 
-            <TouchableOpacity
-                style={[styles.uploadButton, !selectedImage && styles.disabledButton]}
+            <Button
+                mode="contained"
                 onPress={handleUpload}
-                disabled={!selectedImage}
+                disabled={!selectedImage || loading}
+                loading={loading}
+                style={styles.uploadButton}
             >
-                <Text style={styles.buttonText}>Upload to Mentor</Text>
-            </TouchableOpacity>
+                Upload to Mentor
+            </Button>
         </ScrollView>
     );
 };
@@ -106,33 +134,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: lightTheme.colors.border,
+        borderColor: lightTheme.colors.gray, // Fixed border color
         borderStyle: 'dashed',
     },
     placeholderText: {
         color: '#999',
     },
     selectButton: {
-        backgroundColor: lightTheme.colors.secondary,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 8,
+        marginBottom: 10,
     },
     uploadButton: {
-        backgroundColor: lightTheme.colors.primary,
-        paddingVertical: 16,
-        paddingHorizontal: 48,
-        borderRadius: 24,
         width: '100%',
-        alignItems: 'center',
-    },
-    disabledButton: {
-        backgroundColor: '#ccc',
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
 });
 

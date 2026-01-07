@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchPrograms } from '../../redux/dataSlice';
@@ -8,7 +8,7 @@ import { MentorProgramListCard } from './components';
 
 const MentorProgramListScreen = ({ navigation, route }: any) => {
     const { student } = route.params;
-    const programs = useSelector((state: RootState) => state.data.program);
+    const { program: programs, loading } = useSelector((state: RootState) => state.data);
     const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
@@ -18,9 +18,9 @@ const MentorProgramListScreen = ({ navigation, route }: any) => {
     const studentPrograms = programs
         .filter(p => p.student.id === student.id)
         .sort((a, b) => {
-             // Sort by scheduledDate desc, then title
-             if (a.scheduledDate && b.scheduledDate) return b.scheduledDate.localeCompare(a.scheduledDate);
-             return 0;
+            // Sort by scheduledDate desc, then title
+            if (a.scheduledDate && b.scheduledDate) return b.scheduledDate.localeCompare(a.scheduledDate);
+            return 0;
         });
 
     const handleEditTask = (task: any) => {
@@ -33,15 +33,24 @@ const MentorProgramListScreen = ({ navigation, route }: any) => {
                 <Text style={styles.title}>Tasks for {student.name}</Text>
             </View>
 
-            <FlatList
-                data={studentPrograms}
-                keyExtractor={item => item.id}
-                ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>No tasks assigned.</Text></View>}
-                renderItem={({ item }) => (
-                    <MentorProgramListCard item={item} onPress={handleEditTask} />
-                )}
-                contentContainerStyle={{ paddingBottom: 20 }}
-            />
+            {/* Show loading only on initial load or empty list to avoid flicker */}
+            {programs.length === 0 && loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={lightTheme.colors.primary} />
+                </View>
+            ) : (
+                <FlatList
+                    data={studentPrograms}
+                    keyExtractor={item => item.id}
+                    ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>No tasks assigned.</Text></View>}
+                    renderItem={({ item }) => (
+                        <MentorProgramListCard item={item} onPress={handleEditTask} />
+                    )}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    refreshing={loading}
+                    onRefresh={() => dispatch(fetchPrograms())}
+                />
+            )}
         </View>
     );
 };
@@ -67,6 +76,11 @@ const styles = StyleSheet.create({
     emptyText: {
         color: '#999',
         fontSize: 16,
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 

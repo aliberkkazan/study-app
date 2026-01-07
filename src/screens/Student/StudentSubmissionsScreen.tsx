@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchSubmissions } from '../../redux/dataSlice';
@@ -18,13 +18,15 @@ const StudentSubmissionsScreen = () => {
     // Filter submissions for current student 
     const mySubmissions = submissions
         .filter(s => s.student.id === user?.id)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
         <View style={styles.container}>
             <Text style={styles.header}>My Submissions</Text>
             {loading ? (
-                 <Text style={styles.loading}>Loading...</Text>
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={lightTheme.colors.primary as string} />
+                </View>
             ) : mySubmissions.length === 0 ? (
                 <View style={styles.empty}>
                     <Text style={styles.emptyText}>No submissions yet.</Text>
@@ -36,6 +38,9 @@ const StudentSubmissionsScreen = () => {
                     renderItem={({ item }) => (
                         <SubmissionCard item={item} />
                     )}
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={() => dispatch(fetchSubmissions())} />
+                    }
                 />
             )}
         </View>
@@ -54,9 +59,10 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         color: lightTheme.colors.text,
     },
-    loading: {
-        textAlign: 'center',
-        marginTop: 20,
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     empty: {
         flex: 1,

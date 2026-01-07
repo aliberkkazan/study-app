@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Clipboard } from 'react-native';
+import { Button } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { logout, fetchCurrentUser, refreshMentorCode } from '../../redux/authSlice';
@@ -24,7 +25,9 @@ export const ProfileScreen = () => {
 
     // For refresh code: only if !isViewingStudent and role === MENTOR
 
-    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated, loading: authLoading } = useSelector((state: RootState) => state.auth);
+    const { loading: dataLoading } = useSelector((state: RootState) => state.data);
+    const loading = authLoading || dataLoading;
 
     React.useEffect(() => {
         if (!isViewingStudent && isAuthenticated) {
@@ -94,7 +97,7 @@ export const ProfileScreen = () => {
                     <>
                         <View style={styles.codeContainer}>
                             <TouchableOpacity onPress={handleRefreshCode} style={{ alignSelf: 'flex-end' }}>
-                                <Ionicons name="refresh-circle" size={32} color={lightTheme.colors.primary} />
+                                <Ionicons name="refresh-circle" size={32} color={lightTheme.colors.primary as string} />
                             </TouchableOpacity>
                             <Text style={styles.label}>My Mentor Code:</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -104,12 +107,13 @@ export const ProfileScreen = () => {
                             </View>
                             <Text style={styles.hint}>(Tap to copy, button to refresh)</Text>
                         </View>
-                        <TouchableOpacity
-                            style={styles.actionButton}
+                        <Button
+                            mode="contained"
                             onPress={() => navigation.navigate('MentorRequests' as never)}
+                            style={styles.actionButton}
                         >
-                            <Text style={styles.actionButtonText}>Connection Requests</Text>
-                        </TouchableOpacity>
+                            Connection Requests
+                        </Button>
                     </>
                 )}
 
@@ -119,7 +123,7 @@ export const ProfileScreen = () => {
                         <Text style={styles.label}>My Mentor(s):</Text>
                         {displayedUser.mentors.map((m: any) => (
                             <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-                                <Ionicons name="school" size={20} color={lightTheme.colors.secondary} style={{ marginRight: 8 }} />
+                                <Ionicons name="school" size={20} color={lightTheme.colors.secondary as string} style={{ marginRight: 8 }} />
                                 <Text style={styles.name}>{m.name}</Text>
                             </View>
                         ))}
@@ -128,32 +132,46 @@ export const ProfileScreen = () => {
 
                 {/* Show Join Mentor ONLY if viewing OWN profile and Role is Student */}
                 {!isViewingStudent && displayedUser?.role === 'student' && (
-                    <TouchableOpacity
-                        style={styles.actionButton}
+                    <Button
+                        mode="contained"
                         onPress={() => navigation.navigate('JoinMentor' as never)}
+                        style={styles.actionButton}
                     >
-                        <Text style={styles.actionButtonText}>Join a Mentor</Text>
-                    </TouchableOpacity>
+                        Join a Mentor
+                    </Button>
                 )}
 
                 {/* Show Remove Student ONLY if ViewStudent is TRUE (Mentor viewing Student) */}
                 {isViewingStudent && (
-                    <TouchableOpacity
-                        style={[styles.logoutButton, { marginTop: 0, backgroundColor: '#FF3B30' }]}
+                    <Button
+                        mode="contained"
                         onPress={handleRemoveStudent}
+                        buttonColor={lightTheme.colors.danger as string}
+                        loading={loading}
+                        disabled={loading}
+                        style={styles.marginTop}
                     >
-                        <Text style={styles.logoutText}>Remove Student</Text>
-                    </TouchableOpacity>
+                        Remove Student
+                    </Button>
                 )}
             </View>
 
             {/* Logout only if viewing OWN profile */}
-            {!isViewingStudent && (
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutText}>Log Out</Text>
-                </TouchableOpacity>
-            )}
-        </View>
+            {
+                !isViewingStudent && (
+                    <Button
+                        mode="contained"
+                        onPress={handleLogout}
+                        buttonColor={lightTheme.colors.danger as string}
+                        loading={loading}
+                        disabled={loading}
+                        style={styles.logoutButton}
+                    >
+                        Log Out
+                    </Button>
+                )
+            }
+        </View >
     );
 };
 
@@ -219,26 +237,12 @@ const styles = StyleSheet.create({
         color: '#999',
     },
     actionButton: {
-        backgroundColor: lightTheme.colors.primary,
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    actionButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginBottom: 10,
     },
     logoutButton: {
-        backgroundColor: '#FF3B30',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
         marginTop: 'auto',
     },
-    logoutText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+    marginTop: {
+        marginTop: 10,
     },
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchStudents } from '../../redux/dataSlice';
@@ -11,7 +11,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const MentorStudentListScreen = ({ navigation }: any) => {
     const dispatch = useDispatch<AppDispatch>();
     const { students, loading } = useSelector((state: RootState) => state.data);
-    const [refreshing, setRefreshing] = React.useState(false);
     const { colors } = useTheme();
 
     const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -38,17 +37,11 @@ const MentorStudentListScreen = ({ navigation }: any) => {
                     style={{ marginRight: 16 }}
                     onPress={() => navigation.navigate('Profile')}
                 >
-                    <Ionicons name="person-circle-outline" size={30} color={colors.primary} />
+                    <Ionicons name="person-circle-outline" size={30} color={colors.primary as string} />
                 </TouchableOpacity>
             ),
         });
     }, [navigation, colors.primary]);
-
-    const onRefresh = React.useCallback(async () => {
-        setRefreshing(true);
-        await loadStudents();
-        setRefreshing(false);
-    }, [loadStudents]);
 
     const handleSelectStudent = (student: any) => {
         navigation.navigate('MentorDashboard', { student });
@@ -59,11 +52,6 @@ const MentorStudentListScreen = ({ navigation }: any) => {
             flex: 1,
             padding: 20,
             backgroundColor: colors.background,
-        },
-        loading: {
-            textAlign: 'center',
-            marginTop: 20,
-            color: colors.text,
         },
         empty: {
             flex: 1,
@@ -78,13 +66,20 @@ const MentorStudentListScreen = ({ navigation }: any) => {
         subText: {
             color: '#ccc',
             marginTop: 8,
-        }
+        },
+        center: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
     }), [colors]);
 
     return (
         <View style={styles.container}>
-            {loading && !refreshing && students.length === 0 ? (
-                <Text style={styles.loading}>Loading...</Text>
+            {loading && students.length === 0 ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
             ) : students.length === 0 ? (
                 <View style={styles.empty}>
                     <Text style={styles.emptyText}>No students found.</Text>
@@ -95,7 +90,7 @@ const MentorStudentListScreen = ({ navigation }: any) => {
                     data={students}
                     keyExtractor={(item) => item.id}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                        <RefreshControl refreshing={loading} onRefresh={loadStudents} />
                     }
                     renderItem={({ item }) => (
                         <MentorStudentListCard item={item} onPress={handleSelectStudent} />

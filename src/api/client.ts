@@ -1,10 +1,7 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
+import { API_URL } from '@env';
 
-const BASE_URL = Platform.select({
-    android: 'http://10.0.2.2:3001',
-    ios: 'http://localhost:3001',
-});
+const BASE_URL = `${API_URL || ''}/`;
 
 const client = axios.create({
     baseURL: BASE_URL,

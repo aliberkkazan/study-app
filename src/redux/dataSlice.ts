@@ -1,12 +1,11 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import client from '../api/client';
-import { Alert } from 'react-native';
 
 export interface TestSubmission {
   id: string;
   student: { id: string; name: string; email: string };
   imageUrl: string;
-  createdAt: string;
+  created_at: string;
   status: 'pending' | 'approved' | 'rejected';
   feedback?: string;
 }
@@ -27,7 +26,7 @@ export interface ConnectionRequest {
   student: { id: string; name: string };
   mentor?: { id: string; name: string };
   status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
+  created_at: string;
 }
 
 interface DataState {
@@ -53,7 +52,7 @@ export const sendConnectionRequest = createAsyncThunk(
     'data/sendConnectionRequest',
     async (code: string, { rejectWithValue }) => {
         try {
-            const response = await client.post('/users/requests', { code });
+            const response = await client.post('/users/request', { code });
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to send request');
@@ -65,7 +64,7 @@ export const fetchConnectionRequests = createAsyncThunk(
     'data/fetchConnectionRequests',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await client.get('/users/requests/pending');
+            const response = await client.get('/users/requests');
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch requests');
@@ -77,7 +76,7 @@ export const respondToConnectionRequest = createAsyncThunk(
     'data/respondToConnectionRequest',
     async (data: { id: string; status: 'approved' | 'rejected' }, { rejectWithValue }) => {
         try {
-            const response = await client.patch(`/users/requests/${data.id}`, data);
+            const response = await client.patch(`/users/request/${data.id}`, data);
             return response.data;
         } catch (error: any) {
              return rejectWithValue(error.response?.data?.message || 'Failed to respond to request');
@@ -85,10 +84,25 @@ export const respondToConnectionRequest = createAsyncThunk(
     }
 );
 
-export const fetchPrograms = createAsyncThunk('data/fetchPrograms', async (_, { rejectWithValue }) => {
+export const fetchPrograms = createAsyncThunk('data/fetchPrograms', async (_, { getState, rejectWithValue }) => {
     try {
-        const response = await client.get('/programs');
-        // Sort by date if present
+        const state = getState() as { auth: { user: { id: string; role: string } } };
+        const user = state.auth.user;
+        
+        const filter: any = {};
+        if (user) {
+            if (user.role === 'student') {
+                filter.studentId = user.id;
+            } else if (user.role === 'mentor') {
+                filter.mentorId = user.id;
+            }
+        }
+
+        const response = await client.get('/programs', {
+            params: {
+                filter: JSON.stringify(filter)
+            }
+        });
         return response.data;
     } catch (error: any) {
         return rejectWithValue(error.response?.data?.message || 'Failed to fetch programs');
@@ -231,8 +245,17 @@ const dataSlice = createSlice({
             state.loading = false;
             state.submissions = action.payload;
         })
+        .addCase(addSubmission.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
         .addCase(addSubmission.fulfilled, (state, action) => {
+            state.loading = false;
             state.submissions.push(action.payload);
+        })
+        .addCase(addSubmission.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
         })
         .addCase(reviewSubmission.fulfilled, (state, action) => {
             const index = state.submissions.findIndex(s => s.id === action.payload.id);

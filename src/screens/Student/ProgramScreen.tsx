@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, SectionList, StyleSheet } from 'react-native';
+import { View, Text, SectionList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchPrograms, toggleProgramCompletion } from '../../redux/dataSlice';
@@ -47,7 +47,11 @@ const ProgramScreen = ({ navigation }: any) => {
         <View style={styles.container}>
             <Text style={styles.header}>My Study Program</Text>
 
-            {groupedData.length === 0 && !loading ? (
+            {loading && program.length === 0 ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={lightTheme.colors.primary} />
+                </View>
+            ) : groupedData.length === 0 ? (
                 <View style={styles.empty}>
                     <Text style={styles.emptyText}>No tasks assigned yet.</Text>
                 </View>
@@ -62,6 +66,8 @@ const ProgramScreen = ({ navigation }: any) => {
                         <StudentProgramCard item={item} onToggle={handleToggle} />
                     )}
                     contentContainerStyle={styles.list}
+                    refreshing={loading}
+                    onRefresh={() => dispatch(fetchPrograms())}
                 />
             )}
         </View>
@@ -98,6 +104,11 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingBottom: 20,
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 

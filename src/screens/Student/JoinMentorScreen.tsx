@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import { Button } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { sendConnectionRequest } from '../../redux/dataSlice';
@@ -17,7 +18,7 @@ export const JoinMentorScreen = () => {
             Alert.alert('Error', 'Please enter a code');
             return;
         }
-        
+
         try {
             await dispatch(sendConnectionRequest(code)).unwrap();
             Alert.alert('Success', 'Request sent successfully!', [
@@ -43,13 +44,15 @@ export const JoinMentorScreen = () => {
                 maxLength={6}
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleJoin} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Send Request</Text>
-                )}
-            </TouchableOpacity>
+            <Button
+                mode="contained"
+                onPress={handleJoin}
+                loading={loading}
+                disabled={loading}
+                style={styles.button}
+            >
+                Send Request
+            </Button>
         </View>
     );
 };
@@ -81,19 +84,11 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         fontSize: 18,
         borderWidth: 1,
-        borderColor: lightTheme.colors.border,
+        borderColor: lightTheme.colors.gray, // Fixed border color
         marginBottom: 20,
         textAlign: 'center',
     },
     button: {
-        backgroundColor: lightTheme.colors.primary,
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        marginTop: 10,
     },
 });

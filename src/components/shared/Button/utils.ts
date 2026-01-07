@@ -46,7 +46,7 @@ const getButtonBackgroundColor = ({
     customButtonColor?: string;
 }) => {
     if (customButtonColor && !disabled) {
-        return color(customButtonColor).alpha(0.12).rgb().string();
+        return customButtonColor;
     }
 
     if (isMode('contained')) {

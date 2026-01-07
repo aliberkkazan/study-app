@@ -6,7 +6,7 @@ interface SubmissionCardProps {
     item: {
         id: string;
         imageUrl: string;
-        createdAt: string;
+        created_at: string;
         status: 'pending' | 'approved' | 'rejected';
         feedback?: string;
     };
@@ -18,7 +18,7 @@ export const SubmissionCard: React.FC<SubmissionCardProps> = ({ item }) => {
             <Image source={{ uri: item.imageUrl }} style={styles.image} />
             <View style={styles.info}>
                 <View style={styles.row}>
-                    <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+                    <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString()}</Text>
                     <View style={[
                         styles.badge,
                         { backgroundColor: item.status === 'approved' ? '#4CD964' : item.status === 'rejected' ? '#FF3B30' : '#FF9500' }
