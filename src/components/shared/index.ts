@@ -4,6 +4,7 @@ export * from './Button';
 export * from './Icon';
 export * from './ImageViewer';
 export * from './KeyboardAwareScrollView';
+export * from './Loading';
 export * from './SafeAreaView';
 export * from './ScrollView';
 export * from './Text';

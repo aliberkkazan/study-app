@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable comma-dangle */
 import React, { useEffect } from 'react';
 import { NavigationContainer, createNavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -5,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { checkAuth } from '../redux/authSlice';
-import { View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import {
     LoginScreen,
     ProgramScreen,

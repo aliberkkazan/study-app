@@ -6,6 +6,7 @@ import { fetchPrograms, toggleProgramCompletion } from '../../redux/dataSlice';
 import { logout } from '../../redux/authSlice';
 import { lightTheme } from '../../theme/theme';
 import { StudentProgramCard } from './components';
+import { Loading } from '@/components';
 
 const ProgramScreen = ({ navigation }: any) => {
     // ... existing hooks ...
@@ -44,14 +45,11 @@ const ProgramScreen = ({ navigation }: any) => {
     }, [program]);
 
     return (
+        <>
+        <Loading visible={loading}/>
         <View style={styles.container}>
             <Text style={styles.header}>My Study Program</Text>
-
-            {loading && program.length === 0 ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-                </View>
-            ) : groupedData.length === 0 ? (
+            {groupedData.length === 0 ? (
                 <View style={styles.empty}>
                     <Text style={styles.emptyText}>No tasks assigned yet.</Text>
                 </View>
@@ -71,6 +69,7 @@ const ProgramScreen = ({ navigation }: any) => {
                 />
             )}
         </View>
+        </>
     );
 };
 

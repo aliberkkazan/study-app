@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Clipboard } from 'react-native';
-import { Button } from '@/components';
+import { Button, Loading } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { logout, fetchCurrentUser, refreshMentorCode } from '../../redux/authSlice';
@@ -83,6 +83,8 @@ export const ProfileScreen = () => {
     };
 
     return (
+        <>
+        <Loading visible={loading}/>
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.avatarPlaceholder} />
@@ -172,6 +174,7 @@ export const ProfileScreen = () => {
                 )
             }
         </View >
+        </>
     );
 };
 
