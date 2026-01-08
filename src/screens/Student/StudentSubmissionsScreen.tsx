@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
@@ -36,23 +35,22 @@ const StudentSubmissionsScreen = () => {
       <Loading visible={loading} />
       <View style={styles.container}>
         <Text style={styles.header}>My Submissions</Text>
-        {mySubmissions.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No submissions yet.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={mySubmissions}
-            keyExtractor={item => item.id}
-            renderItem={({item}) => <SubmissionCard item={item} />}
-            refreshControl={
-              <RefreshControl
-                refreshing={loading}
-                onRefresh={() => dispatch(fetchSubmissions())}
-              />
-            }
-          />
-        )}
+        <FlatList
+          data={mySubmissions}
+          keyExtractor={item => item.id}
+          renderItem={({item}) => <SubmissionCard item={item} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={() => dispatch(fetchSubmissions())}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No submissions yet.</Text>
+            </View>
+          }
+        />
       </View>
     </>
   );

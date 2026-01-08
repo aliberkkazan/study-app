@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import { Loading } from '@/components';
+import { MentorProgramListCard } from './components';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchPrograms } from '../../redux/dataSlice';
 import { lightTheme } from '../../theme/theme';
-import { MentorProgramListCard } from './components';
+
 
 const MentorProgramListScreen = ({ navigation, route }: any) => {
     const { student } = route.params;
@@ -28,17 +30,12 @@ const MentorProgramListScreen = ({ navigation, route }: any) => {
     };
 
     return (
+        <>
+        <Loading visible={loading}/>
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Tasks for {student.name}</Text>
             </View>
-
-            {/* Show loading only on initial load or empty list to avoid flicker */}
-            {programs.length === 0 && loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-                </View>
-            ) : (
                 <FlatList
                     data={studentPrograms}
                     keyExtractor={item => item.id}
@@ -50,8 +47,8 @@ const MentorProgramListScreen = ({ navigation, route }: any) => {
                     refreshing={loading}
                     onRefresh={() => dispatch(fetchPrograms())}
                 />
-            )}
         </View>
+        </>
     );
 };
 

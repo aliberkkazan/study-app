@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
-import { Button } from '@/components';
+import { Button, Loading } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { addProgramItem, updateProgramItem } from '../../redux/dataSlice';
 import { logout } from '../../redux/authSlice';
 import { lightTheme } from '../../theme/theme';
+
+import { formatDate } from '@/utils/date';
 
 const EditProgramScreen = ({ navigation, route }: any) => {
     const { student, task } = route.params;
@@ -16,8 +18,9 @@ const EditProgramScreen = ({ navigation, route }: any) => {
 
     // Date handling
     const [isScheduled, setIsScheduled] = useState(!!task?.scheduledDate);
-    const [scheduledDate, setScheduledDate] = useState(task?.scheduledDate || new Date().toISOString().split('T')[0]);
-    const [dueDate, setDueDate] = useState(task?.dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0]); // +1 day
+    // Initialize with YYYY-MM-DD
+    const [scheduledDate, setScheduledDate] = useState(formatDate(task?.scheduledDate || new Date()));
+    const [dueDate, setDueDate] = useState(formatDate(task?.dueDate || new Date(Date.now() + 86400000))); // +1 day
 
     const dispatch = useDispatch<AppDispatch>();
     const user = useSelector((state: RootState) => state.auth.user);
@@ -28,14 +31,12 @@ const EditProgramScreen = ({ navigation, route }: any) => {
             setTitle(task.title);
             setDesc(task.description);
             setIsScheduled(!!task.scheduledDate);
-            setScheduledDate(task.scheduledDate || new Date().toISOString().split('T')[0]);
-            setDueDate(task.dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+            // Ensure we show YYYY-MM-DD even if backend sent ISO
+            setScheduledDate(formatDate(task.scheduledDate || new Date()));
+            setDueDate(formatDate(task.dueDate || new Date(Date.now() + 86400000)));
         }
     }, [task]);
 
-    const handleLogout = () => {
-        dispatch(logout());
-    };
 
     const handleSaveTask = () => {
         if (!title.trim()) {
@@ -54,8 +55,9 @@ const EditProgramScreen = ({ navigation, route }: any) => {
         const taskData = {
             title,
             description: desc,
+            // Send exactly what is in the text input (YYYY-MM-DD)
             scheduledDate: isScheduled ? scheduledDate : undefined,
-            dueDate: isScheduled ? new Date(dueDate).toISOString() : undefined,
+            dueDate: isScheduled ? dueDate : undefined,
         };
 
         if (isEditMode) {
@@ -73,7 +75,7 @@ const EditProgramScreen = ({ navigation, route }: any) => {
                     // React Nav might keep params on this tab though.
                     navigation.setParams({ task: undefined });
                 })
-                .catch((err) => Alert.alert('Error', err));
+                .catch((err: any) => Alert.alert('Error', err));
         } else {
             dispatch(addProgramItem({
                 studentId: student.id,
@@ -88,7 +90,7 @@ const EditProgramScreen = ({ navigation, route }: any) => {
                     setDesc('');
                     setIsScheduled(false);
                 })
-                .catch((err) => Alert.alert('Error', err));
+                .catch((err: any) => Alert.alert('Error', err));
         }
     };
 
@@ -98,88 +100,83 @@ const EditProgramScreen = ({ navigation, route }: any) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.headerRow}>
-                <Text style={styles.title}>{isEditMode ? 'Edit Task' : `Assign to ${student.name}`}</Text>
-                <Button
-                    mode="text"
-                    onPress={handleLogout}
-                    compact
-                    textColor={lightTheme.colors.danger as string}
-                >
-                    Logout
-                </Button>
-            </View>
-
-            <View style={styles.form}>
-                <Text style={styles.label}>Task Title</Text>
-                <TextInput
-                    style={styles.input}
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder="e.g. Solve Math Page 10"
-                />
-
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={desc}
-                    onChangeText={setDesc}
-                    placeholder="Details..."
-                    multiline
-                    numberOfLines={4}
-                />
-
-                <View style={styles.toggleRow}>
-                    <Text style={styles.label}>Set Schedule & Due Date</Text>
-                    <Switch
-                        value={isScheduled}
-                        thumbColor={lightTheme.colors.primary as string}
-                        trackColor={{ true: 'red', false: 'gray' }}
-                        ios_backgroundColor="gray"
-                        onValueChange={setIsScheduled}
-                    />
+        <>
+            <Loading visible={loading} />
+            <ScrollView contentContainerStyle={styles.container}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.title}>{isEditMode ? 'Edit Task' : `Assign to ${student.name}`}</Text>
                 </View>
 
-                {isScheduled && (
-                    <>
-                        <Text style={styles.label}>Scheduled Date (YYYY-MM-DD)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={scheduledDate}
-                            onChangeText={setScheduledDate}
-                            placeholder="YYYY-MM-DD"
-                        />
+                <View style={styles.form}>
+                    <Text style={styles.label}>Task Title</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="e.g. Solve Math Page 10"
+                    />
 
-                        <Text style={styles.label}>Due Date (YYYY-MM-DD)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={dueDate}
-                            onChangeText={setDueDate}
-                            placeholder="YYYY-MM-DD"
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        value={desc}
+                        onChangeText={setDesc}
+                        placeholder="Details..."
+                        multiline
+                        numberOfLines={4}
+                    />
+
+                    <View style={styles.toggleRow}>
+                        <Text style={styles.label}>Set Schedule & Due Date</Text>
+                        <Switch
+                            value={isScheduled}
+                            thumbColor={lightTheme.colors.primary as string}
+                            trackColor={{ true: 'red', false: 'gray' }}
+                            ios_backgroundColor="gray"
+                            onValueChange={setIsScheduled}
                         />
-                    </>
-                )}
-                {isEditMode && (
-                    <Button
-                        mode="outlined"
-                        onPress={handleCancel}
-                        style={styles.marginTop}
-                    >
-                        Cancel
-                    </Button>
-                )}
-            </View>
-            <Button
-                mode="contained"
-                onPress={handleSaveTask}
-                loading={loading}
-                disabled={loading}
-                style={styles.marginTop}
-            >
-                {isEditMode ? 'Update Task' : 'Assign Task'}
-            </Button>
-        </ScrollView>
+                    </View>
+
+                    {isScheduled && (
+                        <>
+                            <Text style={styles.label}>Scheduled Date </Text>
+                            <TextInput
+                                style={styles.input}
+                                value={scheduledDate}
+                                onChangeText={setScheduledDate}
+                                placeholder="YYYY-MM-DD"
+                            />
+
+                            <Text style={styles.label}>Due Date</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={dueDate}
+                                onChangeText={setDueDate}
+                                placeholder="YYYY-MM-DD"
+                            />
+                        </>
+                    )}
+                    {isEditMode && (
+                        <Button
+                            mode="outlined"
+                            onPress={handleCancel}
+                            style={styles.marginTop}
+                        >
+                            Cancel
+                        </Button>
+                    )}
+                </View>
+                <Button
+                    mode="contained"
+                    onPress={handleSaveTask}
+                    loading={loading}
+                    disabled={loading}
+                    style={styles.marginTop}
+                >
+                    {isEditMode ? 'Update Task' : 'Assign Task'}
+                </Button>
+            </ScrollView>
+        </>
     );
 };
 

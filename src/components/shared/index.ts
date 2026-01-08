@@ -2,6 +2,7 @@ export * from './ActivityIndicator';
 export * from './Block';
 export * from './Button';
 export * from './Icon';
+export * from './IconButton';
 export * from './ImageViewer';
 export * from './KeyboardAwareScrollView';
 export * from './Loading';

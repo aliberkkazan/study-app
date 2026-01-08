@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { lightTheme } from '../../../theme/theme';
+import { formatDate } from '@/utils/date';
 
 interface ProgramItem {
     id: string;
@@ -25,8 +26,8 @@ export const MentorProgramListCard: React.FC<MentorProgramListCardProps> = ({ it
                     <Text style={styles.badgeText}>{item.completed ? 'Completed' : 'Pending'}</Text>
                 </View>
             </View>
-            {item.scheduledDate && <Text style={styles.date}>Scheduled: {item.scheduledDate}</Text>}
-            {item.dueDate && <Text style={styles.date}>Due: {item.dueDate}</Text>}
+            {item.scheduledDate && <Text style={styles.date}>Scheduled: {formatDate(item.scheduledDate)}</Text>}
+            {item.dueDate && <Text style={styles.date}>Due: {formatDate(item.dueDate)}</Text>}
             <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
             <Text style={styles.editHint}>Tap to edit</Text>
         </TouchableOpacity>

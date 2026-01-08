@@ -58,13 +58,13 @@ try {
 export const accessibilityProps =
     Platform.OS === 'web'
         ? {
-              role: 'img',
-              focusable: false,
-          }
+            role: 'img',
+            focusable: false,
+        }
         : {
-              accessibilityElementsHidden: true,
-              importantForAccessibility: 'no-hide-descendants' as const,
-          };
+            accessibilityElementsHidden: true,
+            importantForAccessibility: 'no-hide-descendants' as const,
+        };
 
 const defaultIcon = ({
     name,

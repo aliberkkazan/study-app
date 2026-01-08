@@ -7,6 +7,7 @@ import { logout } from '../../redux/authSlice';
 import { lightTheme } from '../../theme/theme';
 import { StudentProgramCard } from './components';
 import { Loading } from '@/components';
+import { formatDate } from '@/utils/date';
 
 const ProgramScreen = ({ navigation }: any) => {
     // ... existing hooks ...
@@ -28,7 +29,7 @@ const ProgramScreen = ({ navigation }: any) => {
         const groups: { [key: string]: typeof program } = {};
 
         program.forEach(item => {
-            const dateKey = item.scheduledDate ? new Date(item.scheduledDate).toISOString().split('T')[0] : 'Unscheduled';
+            const dateKey = item.scheduledDate ? formatDate(item.scheduledDate) : 'Unscheduled';
             if (!groups[dateKey]) {
                 groups[dateKey] = [];
             }
@@ -46,29 +47,29 @@ const ProgramScreen = ({ navigation }: any) => {
 
     return (
         <>
-        <Loading visible={loading}/>
-        <View style={styles.container}>
-            <Text style={styles.header}>My Study Program</Text>
-            {groupedData.length === 0 ? (
-                <View style={styles.empty}>
-                    <Text style={styles.emptyText}>No tasks assigned yet.</Text>
-                </View>
-            ) : (
-                <SectionList
-                    sections={groupedData}
-                    keyExtractor={(item) => item.id}
-                    renderSectionHeader={({ section: { title } }) => (
-                        <Text style={styles.sectionHeader}>{title}</Text>
-                    )}
-                    renderItem={({ item }) => (
-                        <StudentProgramCard item={item} onToggle={handleToggle} />
-                    )}
-                    contentContainerStyle={styles.list}
-                    refreshing={loading}
-                    onRefresh={() => dispatch(fetchPrograms())}
-                />
-            )}
-        </View>
+            <Loading visible={loading} />
+            <View style={styles.container}>
+                <Text style={styles.header}>My Study Program</Text>
+                {groupedData.length === 0 ? (
+                    <View style={styles.empty}>
+                        <Text style={styles.emptyText}>No tasks assigned yet.</Text>
+                    </View>
+                ) : (
+                    <SectionList
+                        sections={groupedData}
+                        keyExtractor={(item) => item.id}
+                        renderSectionHeader={({ section: { title } }) => (
+                            <Text style={styles.sectionHeader}>{title}</Text>
+                        )}
+                        renderItem={({ item }) => (
+                            <StudentProgramCard item={item} onToggle={handleToggle} />
+                        )}
+                        contentContainerStyle={styles.list}
+                        refreshing={loading}
+                        onRefresh={() => dispatch(fetchPrograms())}
+                    />
+                )}
+            </View>
         </>
     );
 };
