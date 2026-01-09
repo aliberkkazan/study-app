@@ -42,11 +42,7 @@ const LoginScreen = ({ navigation }: any) => {
                     onChangeText={setPassword}
                 />
             </View>
-
             {error && <Text style={styles.errorText}>{error}</Text>}
-
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
             <Button
                 mode="contained"
                 onPress={handleLogin}

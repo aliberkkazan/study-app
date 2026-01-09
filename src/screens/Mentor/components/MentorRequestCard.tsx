@@ -12,9 +12,10 @@ interface MentorRequestCardProps {
     };
     onApprove: (id: string) => void;
     onReject: (id: string) => void;
+    loading?: boolean | undefined;
 }
 
-export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onApprove, onReject }) => {
+export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onApprove, onReject, loading }) => {
     return (
         <View style={styles.card}>
             <View style={styles.info}>
@@ -27,6 +28,7 @@ export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onAp
                     buttonColor="#FF3B30"
                     onPress={() => onReject(item.id)}
                     compact
+                    loading={loading}
                 >
                     Reject
                 </Button>
@@ -35,6 +37,7 @@ export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onAp
                     buttonColor="#34C759"
                     onPress={() => onApprove(item.id)}
                     compact
+                    loading={loading}
                 >
                     Approve
                 </Button>

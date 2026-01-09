@@ -1,20 +1,19 @@
 import React from 'react';
 import { Icon } from '@/components';
 
-export const TAB_ICON_CONFIG: Record<string, { focused: string; outline: string }> = {
-    'Program': { focused: 'calendar', outline: 'calendar-outline' },
-    'Pomodoro': { focused: 'timer', outline: 'timer-outline' },
-    'Upload': { focused: 'cloud-upload', outline: 'cloud-upload-outline' },
-    'My Submissions': { focused: 'format-list-bulleted', outline: 'clipboard-list-outline' },
-    'Assign Tasks': { focused: 'pencil', outline: 'pencil-outline' },
-    'Task List': { focused: 'format-list-bulleted', outline: 'format-list-bulleted' },
-    'Review Tests': { focused: 'checkbox-marked', outline: 'checkbox-blank-outline' },
-    'Profile': { focused: 'account', outline: 'account-outline' },
-    'Students': { focused: 'account-group', outline: 'account-group-outline' },
+export const TAB_ICON_CONFIG: Record<string, { icon: string; }> = {
+    'Program': { icon: 'calendar'},
+    'Pomodoro': { icon: 'timer' },
+    'Upload': { icon: 'cloud-upload' },
+    'My Submissions': { icon: 'format-list-bulleted'},
+    'Assign Tasks': { icon: 'pencil' },
+    'Task List': { icon: 'format-list-bulleted' },
+    'Review Tests': { icon: 'checkbox-marked' },
+    'Profile': { icon: 'account' },
+    'Students': { icon: 'account-group'},
 };
 
-export const getTabBarIcon = (routeName: string, focused: boolean, color: string, size: number) => {
+export const getTabBarIcon = (routeName: string, icon: boolean, color: string, size: number) => {
     const config = TAB_ICON_CONFIG[routeName];
-    const iconName = config ? (focused ? config.focused : config.outline) : 'help-circle';
-    return <Icon source={iconName} size={size} color={color} />;
+    return <Icon source={config.icon} size={size} color={color} />;
 };

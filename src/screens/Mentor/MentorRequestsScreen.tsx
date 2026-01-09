@@ -39,6 +39,7 @@ export const MentorRequestsScreen = () => {
               item={item}
               onApprove={handleApprove}
               onReject={handleReject}
+              loading={loading}
             />
           )}
           keyExtractor={item => item.id}
