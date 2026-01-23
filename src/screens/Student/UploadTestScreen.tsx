@@ -13,6 +13,8 @@ const UploadTestScreen = () => {
     const { loading } = useSelector((state: any) => state.data);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+    const hasMentors = user?.mentors && user.mentors.length > 0;
+
     const handleSelectImage = async () => {
         const result = await launchImageLibrary({
             mediaType: 'photo',
@@ -83,15 +85,22 @@ const UploadTestScreen = () => {
                     mode="contained"
                     onPress={handleSelectImage}
                     style={styles.selectButton}
+                    disabled={!hasMentors}
                 >
                     Select Page Photo
                 </Button>
+
+                {!hasMentors && (
+                    <Text style={styles.warningText}>
+                        You must be connected to a mentor to upload photos.
+                    </Text>
+                )}
             </View>
 
             <Button
                 mode="contained"
                 onPress={handleUpload}
-                disabled={!selectedImage || loading}
+                disabled={!selectedImage || loading || !hasMentors}
                 loading={loading}
                 style={styles.uploadButton}
             >
@@ -145,6 +154,12 @@ const styles = StyleSheet.create({
     },
     uploadButton: {
         width: '100%',
+    },
+    warningText: {
+        color: '#FF6B6B',
+        marginTop: 10,
+        textAlign: 'center',
+        fontWeight: 'bold',
     },
 });
 

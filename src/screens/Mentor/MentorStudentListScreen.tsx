@@ -7,13 +7,14 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchStudents, removeStudent } from '../../redux/dataSlice';
 import { useTheme } from '@/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { MentorStudentListCard } from './components';
-import { Loading, IconButton } from '@/components';
+import { Loading, IconButton, Icon } from '@/components';
 
 const MentorStudentListScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -91,9 +92,11 @@ const MentorStudentListScreen = ({ navigation }: any) => {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
+              <View style={styles.arrowContainer}>
+                <Icon source="arrow-up" size={40} color={colors.overlay as string} style={styles.arrow} />
+              </View>
               <Text style={styles.emptyText}>No students found.</Text>
-              <Text style={styles.subText}>Ask students to add your code.</Text>
-            </View>
+              <Text style={styles.subText}>Ask students to add your code.</Text></View>
           }
         />
       </View>
@@ -121,6 +124,16 @@ const styles = StyleSheet.create({
   subText: {
     color: '#ccc',
     marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  arrowContainer: {
+    position: 'absolute',
+    right: -5,
+    top: -4
+  },
+  arrow: {
+    transform: [{ rotate: '45deg' }],
   },
   center: {
     flex: 1,

@@ -1,4 +1,5 @@
 export { default as LoginScreen } from './Auth/LoginScreen';
+export { default as RegisterScreen } from './Auth/RegisterScreen';
 export { default as RoleSelectionScreen } from './Common/RoleSelectionScreen';
 export { default as EditProgramScreen } from './Mentor/EditProgramScreen';
 export { default as MentorProgramListScreen } from './Mentor/MentorProgramListScreen';

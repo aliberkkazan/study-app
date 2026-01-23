@@ -1,6 +1,7 @@
 
 import {
     LoginScreen,
+    RegisterScreen,
     ProgramScreen,
     PomodoroScreen,
     EditProgramScreen,
@@ -40,6 +41,7 @@ export const MENTOR_TAB_ROUTES: RouteConfig[] = [
 
 export const AUTH_ROUTES: RouteConfig[] = [
     { name: 'Login', component: LoginScreen },
+    { name: 'Register', component: RegisterScreen },
 ];
 
 export const COMMON_STACK_ROUTES: RouteConfig[] = [

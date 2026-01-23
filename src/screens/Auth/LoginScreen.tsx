@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
     View,
     Text,
@@ -31,6 +32,7 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const navigation = useNavigation();
     const dispatch = useDispatch<AppDispatch>();
     const { loading, error } = useSelector((state: RootState) => state.auth);
 
@@ -136,6 +138,13 @@ const LoginScreen = () => {
                     >
                         Login
                     </Button>
+
+                    <View style={styles.registerContainer}>
+                        <Text style={styles.registerText}>Don't have an account? </Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Register' as never)}>
+                            <Text style={styles.registerLink}>Register</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </KeyboardAvoidingView>
         </ImageBackground>
@@ -250,6 +259,21 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         letterSpacing: 1,
+    },
+    registerContainer: {
+        flexDirection: 'row',
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    registerText: {
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontSize: 14,
+    },
+    registerLink: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
     },
 });
 
