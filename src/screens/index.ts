@@ -1,3 +1,5 @@
+export * from './Common';
+
 export { default as LoginScreen } from './Auth/LoginScreen';
 export { default as RegisterScreen } from './Auth/RegisterScreen';
 export { default as RoleSelectionScreen } from './Common/RoleSelectionScreen';
@@ -11,4 +13,3 @@ export { default as StudentSubmissionsScreen } from './Student/StudentSubmission
 export { default as UploadTestScreen } from './Student/UploadTestScreen';
 export { JoinMentorScreen } from './Student/JoinMentorScreen';
 export { MentorRequestsScreen } from './Mentor/MentorRequestsScreen';
-export { ProfileScreen } from './Common/ProfileScreen';

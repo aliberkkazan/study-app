@@ -1,7 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, createNavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,6 +13,7 @@ import StudentNavigator from './StudentNavigator';
 import MentorNavigator from './MentorNavigator';
 import { AUTH_ROUTES, COMMON_STACK_ROUTES, ADMIN_STACK_ROUTES } from './routes';
 import { Loading, IconButton } from '@/components';
+import { BootSplash } from '@/components/shared/BootSplash';
 
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -99,7 +99,9 @@ const AuthenticatedStack = () => {
 const RootNavigator = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { isAuthenticated, isInitialized } = useSelector((state: RootState) => state.auth);
+    const [visible, setVisible] = useState(true);
 
+    const onAnimationEnd = () => setVisible(false);
     useEffect(() => {
         dispatch(checkAuth());
     }, [dispatch]);
@@ -123,6 +125,7 @@ const RootNavigator = () => {
 
     return (
         <NavigationContainer ref={navigationRef}>
+            {visible && <BootSplash onAnimationEnd={onAnimationEnd} />}
             {isAuthenticated ? <AuthenticatedStack /> : <AuthStack />}
         </NavigationContainer>
     );

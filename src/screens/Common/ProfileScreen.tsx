@@ -9,22 +9,22 @@ import {
   Alert,
   Clipboard,
 } from 'react-native';
-import {Button, Loading, IconButton, Icon, Block} from '@/components';
-import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '../../redux/store';
+import { Button, Loading, IconButton, Icon, Block } from '@/components';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
 import {
   logout,
   fetchCurrentUser,
   refreshMentorCode,
 } from '../../redux/authSlice';
 
-import {lightTheme} from '../../theme/theme';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { lightTheme } from '../../theme/theme';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-export const ProfileScreen = () => {
+const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
-  const {user: currentUser} = useSelector((state: RootState) => state.auth);
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   // If 'student' param is passed, we are viewing that student's profile (as a mentor)
   // Otherwise we are viewing our own profile
   const route = useRoute();
@@ -37,10 +37,10 @@ export const ProfileScreen = () => {
 
   // For refresh code: only if !isViewingStudent and role === MENTOR
 
-  const {isAuthenticated, loading: authLoading} = useSelector(
+  const { isAuthenticated, loading: authLoading } = useSelector(
     (state: RootState) => state.auth,
   );
-  const {loading: dataLoading} = useSelector((state: RootState) => state.data);
+  const { loading: dataLoading } = useSelector((state: RootState) => state.data);
   const loading = authLoading || dataLoading;
 
   React.useEffect(() => {
@@ -59,7 +59,7 @@ export const ProfileScreen = () => {
       'Refresh Mentor Code',
       'Are you sure? You can only do this once every 12 hours.',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Refresh',
           style: 'destructive',
@@ -114,9 +114,9 @@ export const ProfileScreen = () => {
                 mode="contained"
                 onPress={() => navigation.navigate('MentorRequests' as never)}
                 style={styles.actionButton}
-                contentStyle={{flexDirection:'row-reverse'}}
+                contentStyle={{ flexDirection: 'row-reverse' }}
                 icon='arrow-right'>
-                Connection Requests 
+                Connection Requests
               </Button>
             </>
           )}
@@ -133,7 +133,7 @@ export const ProfileScreen = () => {
                     alignItems: 'center',
                     marginBottom: 5,
                   }}>
-                  <View style={{marginRight: 8}}>
+                  <View style={{ marginRight: 8 }}>
                     <Icon
                       source="school"
                       size={20}
@@ -245,3 +245,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
+export default ProfileScreen;
