@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Button } from '@/components';
 import { addSubmission } from '../../redux/dataSlice';
+import { fetchCurrentUser } from '../../redux/authSlice';
+import { useFocusEffect } from '@react-navigation/native';
 import { lightTheme } from '../../theme/theme';
 
 const UploadTestScreen = () => {
@@ -14,6 +16,14 @@ const UploadTestScreen = () => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const hasMentors = user?.mentors && user.mentors.length > 0;
+
+    useFocusEffect(
+        useCallback(() => {
+            if (!hasMentors) {
+                dispatch(fetchCurrentUser() as any);
+            }
+        }, [dispatch, hasMentors])
+    );
 
     const handleSelectImage = async () => {
         const result = await launchImageLibrary({
