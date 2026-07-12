@@ -4,9 +4,10 @@
 
 ### A mentor–student study management application built with React Native
 
-Study App helps students organize their study process, follow mentor-created programs, stay focused with Pomodoro sessions, and submit their work for review.
+Study App helps students organize their learning process, follow mentor-assigned tasks, improve focus with Pomodoro sessions, and submit their work for review.
 
-[View on the App Store](https://apps.apple.com/us/app/study-app-mentor-student/id6758196655) · [Backend Repository](https://github.com/aliberkkazan/study-app-backend)
+[![App Store](https://img.shields.io/badge/App_Store-Download-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apps.apple.com/us/app/study-app-mentor-student/id6758196655)
+[![Backend](https://img.shields.io/badge/Backend-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/aliberkkazan/study-app-backend)
 
 </div>
 
@@ -14,33 +15,42 @@ Study App helps students organize their study process, follow mentor-created pro
 
 ## About the Project
 
-Study App is a role-based mobile application designed to create a structured workflow between students and mentors.
+**Study App - Mentor & Student** is a role-based education application designed to create a structured workflow between students and mentors.
 
-Students can connect with a mentor, follow personalized study programs, manage focus sessions, and upload test or homework results. Mentors can manage their students, prepare study programs, review submissions, and provide feedback.
+Students can connect with a mentor, follow assigned study tasks, use a built-in Pomodoro timer, and upload photos of completed tests or homework.
 
-The application is currently published on the Apple App Store.
+Mentors can manage multiple students, assign study tasks, review uploaded work, and provide feedback through the application.
+
+The application is currently available on the Apple App Store.
+
+---
 
 ## Features
 
-### For Students
+### Student Experience
 
-- Register and sign in with a student account
-- Connect with a mentor using a unique mentor code
-- Follow assigned study programs
-- Use a built-in Pomodoro focus timer
+- Create and manage a student account
+- Connect with a mentor using a mentor code
+- View mentor-assigned study tasks
+- Track assigned work and completion status
+- Use the built-in Pomodoro focus timer
 - Upload test and homework images
-- View previous submissions and mentor reviews
-- Track study tasks and progress
+- Review previous submissions
+- View feedback provided by the mentor
 
-### For Mentors
+### Mentor Experience
 
-- Register and sign in with a mentor account
-- Share and refresh a unique mentor code
-- Accept or reject student connection requests
-- View and manage connected students
-- Create and edit study programs
-- Review student test submissions
-- Provide structured feedback
+- Create and manage a mentor account
+- Generate and share a unique mentor code
+- Review student connection requests
+- Accept or reject student requests
+- Manage connected students
+- Create and assign study tasks
+- Track student progress
+- Review uploaded tests and homework
+- Provide feedback on student submissions
+
+---
 
 ## Tech Stack
 
@@ -50,24 +60,208 @@ The application is currently published on the Apple App Store.
   <img src="https://img.shields.io/badge/Redux_Toolkit-764ABC?style=flat-square&logo=redux&logoColor=white" alt="Redux Toolkit" />
   <img src="https://img.shields.io/badge/React_Navigation-6B52AE?style=flat-square&logo=react&logoColor=white" alt="React Navigation" />
   <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white" alt="Axios" />
+  <img src="https://img.shields.io/badge/Reanimated-001A72?style=flat-square&logo=react&logoColor=white" alt="React Native Reanimated" />
+  <img src="https://img.shields.io/badge/Lottie-00DDB3?style=flat-square&logo=airbnb&logoColor=white" alt="Lottie" />
   <img src="https://img.shields.io/badge/iOS-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS" />
 </p>
 
+- **React Native CLI** for cross-platform mobile development
+- **TypeScript** for type-safe application development
+- **Redux Toolkit** and React Redux for global state management
+- **React Navigation** for role-based stack and tab navigation
+- **Axios** for communication with the backend REST API
+- **React Native Reanimated** for animations and interactions
+- **Lottie** for animated visual elements
+- **React Native Image Picker** for test and homework uploads
+- **date-fns** for date and time operations
+
+---
+
 ## Application Architecture
 
-The application follows a modular React Native structure:
+The application follows a modular, role-based structure.
 
 ```text
 src/
 ├── api/          # Axios client and API configuration
 ├── assets/       # Images, icons and animations
 ├── components/   # Reusable UI components
-├── navigators/   # Role-based application navigation
-├── redux/        # Authentication and application state
+├── constant/     # Shared application constants
+├── helper/       # Helper functions
+├── navigators/   # Root, student and mentor navigation
+├── redux/        # Redux store and application slices
 ├── screens/
-│   ├── Auth/     # Login and registration
-│   ├── Mentor/   # Mentor management and review flows
-│   └── Student/  # Programs, Pomodoro and submissions
-├── theme/        # Application theme
-├── types/        # TypeScript types
-└── utils/        # Shared utilities
+│   ├── Auth/     # Authentication screens
+│   ├── Common/   # Shared screens
+│   ├── Mentor/   # Mentor-specific features
+│   └── Student/  # Student-specific features
+├── theme/        # Colors and application styling
+├── types/        # Shared TypeScript definitions
+└── utils/        # Utility functions
+```
+
+---
+
+## Navigation
+
+Study App uses role-based navigation.
+
+After authentication, users are directed to the appropriate application flow based on their account role:
+
+- **Student Navigator**
+- **Mentor Navigator**
+
+Each role has its own screens, actions, and bottom-tab navigation structure.
+
+---
+
+## API Integration
+
+The mobile application communicates with the Study App backend through an Axios client.
+
+The API base URL is loaded from the environment configuration:
+
+```env
+API_URL=http://localhost:3000
+```
+
+Authentication tokens are attached to protected requests using the Bearer authentication scheme.
+
+The backend source code is available here:
+
+[Study App Backend](https://github.com/aliberkkazan/study-app-backend)
+
+---
+
+## Getting Started
+
+### Requirements
+
+Before running the project, make sure the following tools are installed:
+
+- Node.js 18 or newer
+- Yarn or npm
+- Xcode
+- CocoaPods
+- Android Studio for Android development
+- A running Study App backend API
+
+---
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/aliberkkazan/study-app.git
+cd study-app
+```
+
+Install JavaScript dependencies:
+
+```bash
+yarn install
+```
+
+Install iOS dependencies:
+
+```bash
+cd ios
+pod install
+cd ..
+```
+
+---
+
+### Environment Configuration
+
+Create a `.env` file in the project root:
+
+```env
+API_URL=http://localhost:3000
+```
+
+When running the application on a physical device, replace `localhost` with the local network IP address of the computer running the backend.
+
+Example:
+
+```env
+API_URL=http://192.168.1.100:3000
+```
+
+Do not commit production credentials or sensitive environment variables to the repository.
+
+---
+
+## Running the Application
+
+Start Metro Bundler:
+
+```bash
+yarn start
+```
+
+Run the iOS application:
+
+```bash
+yarn ios
+```
+
+Run the Android application:
+
+```bash
+yarn android
+```
+
+---
+
+## Code Quality
+
+Run ESLint:
+
+```bash
+yarn lint
+```
+
+Run tests:
+
+```bash
+yarn test
+```
+
+---
+
+## App Store
+
+Study App is published on the Apple App Store as:
+
+### Study App - Mentor & Student
+
+The application is designed for iPhone and provides dedicated experiences for both students and mentors.
+
+[View Study App on the App Store](https://apps.apple.com/us/app/study-app-mentor-student/id6758196655)
+
+---
+
+## Related Repository
+
+The NestJS backend API is maintained in a separate repository:
+
+[Study App Backend](https://github.com/aliberkkazan/study-app-backend)
+
+---
+
+## Author
+
+Developed by **Ali Berk Kazan**
+
+- [GitHub Profile](https://github.com/aliberkkazan)
+- [App Store Developer Profile](https://apps.apple.com/au/developer/ali-berk-kazan/id1871383287)
+
+---
+
+<div align="center">
+
+Built with React Native and TypeScript.
+
+</div>
