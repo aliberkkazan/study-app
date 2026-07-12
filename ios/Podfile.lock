@@ -1642,7 +1642,7 @@ PODS:
     - Yoga
   - RNFS (2.20.0):
     - React-Core
-  - RNGestureHandler (2.31.2):
+  - RNGestureHandler (2.23.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2162,7 +2162,7 @@ SPEC CHECKSUMS:
   ReactCommon: 3c1c8c6d777103c0e60e37c6c5f08e828e2a77c9
   RNCPicker: 0748b21c2a353896538505b95108fbf23c12e973
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
-  RNGestureHandler: 2121f00fbfca1b26fb78b2b2f4285b06275947c0
+  RNGestureHandler: ec23e4d1de3799e1c878f51ad23183fd4bf072d9
   RNReanimated: 92c34933cbbe2c09acd4ef5f29be9a835c3f912d
   RNScreens: b941e3ee5fe1991bd25098b5fc8d72db88678793
   RNSVG: 588c85abb474f7ee58dd886ed1fe198cc73772b2
