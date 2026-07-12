@@ -1,79 +1,73 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+<div align="center">
 
-# Getting Started
+# Study App
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+### A mentor–student study management application built with React Native
 
-## Step 1: Start the Metro Server
+Study App helps students organize their study process, follow mentor-created programs, stay focused with Pomodoro sessions, and submit their work for review.
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+[View on the App Store](https://apps.apple.com/us/app/study-app-mentor-student/id6758196655) · [Backend Repository](https://github.com/aliberkkazan/study-app-backend)
 
-To start Metro, run the following command from the _root_ of your React Native project:
+</div>
 
-```bash
-# using npm
-npm start
+---
 
-# OR using Yarn
-yarn start
-```
+## About the Project
 
-## Step 2: Start your Application
+Study App is a role-based mobile application designed to create a structured workflow between students and mentors.
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+Students can connect with a mentor, follow personalized study programs, manage focus sessions, and upload test or homework results. Mentors can manage their students, prepare study programs, review submissions, and provide feedback.
 
-### For Android
+The application is currently published on the Apple App Store.
 
-```bash
-# using npm
-npm run android
+## Features
 
-# OR using Yarn
-yarn android
-```
+### For Students
 
-### For iOS
+- Register and sign in with a student account
+- Connect with a mentor using a unique mentor code
+- Follow assigned study programs
+- Use a built-in Pomodoro focus timer
+- Upload test and homework images
+- View previous submissions and mentor reviews
+- Track study tasks and progress
 
-```bash
-# using npm
-npm run ios
+### For Mentors
 
-# OR using Yarn
-yarn ios
-```
+- Register and sign in with a mentor account
+- Share and refresh a unique mentor code
+- Accept or reject student connection requests
+- View and manage connected students
+- Create and edit study programs
+- Review student test submissions
+- Provide structured feedback
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## Tech Stack
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+<p>
+  <img src="https://img.shields.io/badge/React_Native-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Redux_Toolkit-764ABC?style=flat-square&logo=redux&logoColor=white" alt="Redux Toolkit" />
+  <img src="https://img.shields.io/badge/React_Navigation-6B52AE?style=flat-square&logo=react&logoColor=white" alt="React Navigation" />
+  <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white" alt="Axios" />
+  <img src="https://img.shields.io/badge/iOS-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS" />
+</p>
 
-## Step 3: Modifying your App
+## Application Architecture
 
-Now that you have successfully run the app, let's modify it.
+The application follows a modular React Native structure:
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```text
+src/
+├── api/          # Axios client and API configuration
+├── assets/       # Images, icons and animations
+├── components/   # Reusable UI components
+├── navigators/   # Role-based application navigation
+├── redux/        # Authentication and application state
+├── screens/
+│   ├── Auth/     # Login and registration
+│   ├── Mentor/   # Mentor management and review flows
+│   └── Student/  # Programs, Pomodoro and submissions
+├── theme/        # Application theme
+├── types/        # TypeScript types
+└── utils/        # Shared utilities
