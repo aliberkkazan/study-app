@@ -27,7 +27,7 @@ const RegisterScreen = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [role, setRole] = useState<'student' | 'mentor'>('student');
+    const role = 'student'; // Default role for onboarding
 
     const handleRegister = async () => {
         if (!name.trim() || !email.trim() || !password.trim()) {
@@ -90,36 +90,7 @@ const RegisterScreen = () => {
                     <Text style={styles.subtitle}>Sign up to get started</Text>
 
                     <View style={styles.inputContainer}>
-                        <View style={styles.roleContainer}>
-                            <TouchableOpacity
-                                style={[styles.roleButton, role === 'student' && styles.roleButtonActive]}
-                                onPress={() => setRole('student')}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons
-                                    name="school"
-                                    size={20}
-                                    color={role === 'student' ? '#fff' : 'rgba(255,255,255,0.7)'}
-                                />
-                                <Text style={[styles.roleText, role === 'student' && styles.roleTextActive]}>
-                                    Student
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.roleButton, role === 'mentor' && styles.roleButtonActive]}
-                                onPress={() => setRole('mentor')}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons
-                                    name="person"
-                                    size={20}
-                                    color={role === 'mentor' ? '#fff' : 'rgba(255,255,255,0.7)'}
-                                />
-                                <Text style={[styles.roleText, role === 'mentor' && styles.roleTextActive]}>
-                                    Mentor
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                        {/* Role selection has been removed to make solo-student the default onboarding flow */}
 
                         <View style={styles.inputWrapper}>
                             <TextInput

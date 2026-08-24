@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import client from '../api/client';
+import { handleApiError } from '../api/error';
 
 export interface TestSubmission {
   id: string;
@@ -54,8 +55,9 @@ export const sendConnectionRequest = createAsyncThunk(
         try {
             const response = await client.post('/users/request', { code });
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to send request');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -66,8 +68,9 @@ export const fetchConnectionRequests = createAsyncThunk(
         try {
             const response = await client.get('/users/requests');
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch requests');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -78,8 +81,9 @@ export const respondToConnectionRequest = createAsyncThunk(
         try {
             const response = await client.patch(`/users/request/${data.id}`, data);
             return response.data;
-        } catch (error: any) {
-             return rejectWithValue(error.response?.data?.message || 'Failed to respond to request');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+             return rejectWithValue(appError.message);
         }
     }
 );
@@ -89,7 +93,7 @@ export const fetchPrograms = createAsyncThunk('data/fetchPrograms', async (_, { 
         const state = getState() as { auth: { user: { id: string; role: string } } };
         const user = state.auth.user;
         
-        const filter: any = {};
+        const filter: Record<string, string> = {};
         if (user) {
             if (user.role === 'student') {
                 filter.studentId = user.id;
@@ -104,8 +108,9 @@ export const fetchPrograms = createAsyncThunk('data/fetchPrograms', async (_, { 
             }
         });
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to fetch programs');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -115,8 +120,9 @@ export const addProgramItem = createAsyncThunk(
         try {
             const response = await client.post('/programs', task);
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to add program');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -127,8 +133,9 @@ export const updateProgramItem = createAsyncThunk(
         try {
             const response = await client.patch(`/programs/${task.id}`, task);
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update program');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -141,8 +148,9 @@ export const toggleProgramCompletion = createAsyncThunk('data/toggleCompletion',
 
         const response = await client.patch(`/programs/${id}`, { completed: !program.completed });
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to update program');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -150,8 +158,9 @@ export const fetchSubmissions = createAsyncThunk('data/fetchSubmissions', async 
     try {
         const response = await client.get('/submissions');
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to fetch submissions');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -159,8 +168,9 @@ export const addSubmission = createAsyncThunk('data/addSubmission', async (submi
     try {
         const response = await client.post('/submissions', submission);
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to add submission');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -168,8 +178,9 @@ export const reviewSubmission = createAsyncThunk('data/reviewSubmission', async 
     try {
         const response = await client.patch(`/submissions/${data.id}`, data);
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to review submission');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -185,8 +196,9 @@ export const fetchStudents = createAsyncThunk('data/fetchStudents', async (_, { 
         
         const response = await client.get(url);
         return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to fetch students');
+    } catch (error: unknown) {
+        const appError = handleApiError(error);
+        return rejectWithValue(appError.message);
     }
 });
 
@@ -197,8 +209,9 @@ export const removeStudent = createAsyncThunk(
         try {
             await client.delete(`/users/students/${studentId}`);
             return { id: studentId };
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to remove student');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
         }
     }
 );

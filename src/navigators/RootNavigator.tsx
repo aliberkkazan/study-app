@@ -7,9 +7,8 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { RootState, AppDispatch } from '../redux/store';
 import { checkAuth } from '../redux/authSlice';
-import { MentorStudentListScreen } from '@screens';
 
-import StudentNavigator from './StudentNavigator';
+import MainTabNavigator from './MainTabNavigator';
 import MentorNavigator from './MentorNavigator';
 import { AUTH_ROUTES, COMMON_STACK_ROUTES, ADMIN_STACK_ROUTES } from './routes';
 import { Loading, IconButton } from '@/components';
@@ -36,35 +35,22 @@ const AuthenticatedStack = () => {
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {/* Role Based Screens */}
-            {user?.role === 'admin' ? (
-                <>
-                    {ADMIN_STACK_ROUTES.map((route) => (
-                        <Stack.Screen
-                            key={route.name}
-                            name={route.name}
-                            component={route.component}
-                            options={route.options}
-                        />
-                    ))}
-                    <Stack.Screen name="StudentHome" component={StudentNavigator} />
+            {/* Core User Experience */}
+            <Stack.Screen name="MainTab" component={MainTabNavigator} />
+
+            {/* Admin Screens */}
+            {user?.role === 'admin' && (
+                ADMIN_STACK_ROUTES.map((route) => (
                     <Stack.Screen
-                        name="MentorHome"
-                        component={MentorStudentListScreen}
-                        options={{ headerShown: true, title: 'My Students' }}
+                        key={route.name}
+                        name={route.name}
+                        component={route.component}
+                        options={route.options}
                     />
-                </>
-            ) : user?.role === 'student' ? (
-                <Stack.Screen name="StudentHome" component={StudentNavigator} />
-            ) : (
-                <Stack.Screen
-                    name="MentorHome"
-                    component={MentorStudentListScreen}
-                    options={{ headerShown: true, title: 'My Students' }}
-                />
+                ))
             )}
 
-            {/* Common Screens */}
+            {/* Common Screens (Profile Settings, Join Mentor, etc) */}
             {COMMON_STACK_ROUTES.map((route) => (
                 <Stack.Screen
                     key={route.name}
@@ -74,7 +60,7 @@ const AuthenticatedStack = () => {
                 />
             ))}
 
-            {/* Shared Nested Navigators */}
+            {/* Legacy Mentor Screens - moved here for Profile -> More access */}
             <Stack.Screen
                 name="MentorDashboard"
                 component={MentorNavigator}
@@ -92,6 +78,7 @@ const AuthenticatedStack = () => {
                     ),
                 })}
             />
+            {/* Legacy Mentor Dashboard or related old screens can be accessed via Profile -> More */}
         </Stack.Navigator>
     );
 };

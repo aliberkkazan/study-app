@@ -13,3 +13,8 @@ export { default as StudentSubmissionsScreen } from './Student/StudentSubmission
 export { default as UploadTestScreen } from './Student/UploadTestScreen';
 export { JoinMentorScreen } from './Student/JoinMentorScreen';
 export { MentorRequestsScreen } from './Mentor/MentorRequestsScreen';
+
+// Core
+export { default as TodayScreen } from './Core/TodayScreen';
+export { default as FocusScreen } from './Core/FocusScreen';
+export { default as ProgressScreen } from './Core/ProgressScreen';

@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import client, { setAuthToken } from '../api/client';
 import { Alert } from 'react-native';
+import { handleApiError } from '../api/error';
+import { saveAuthSession, clearAuthSession, loadAuthSession } from '../utils/authStorage';
 
 interface User {
     id: string;
@@ -8,10 +10,8 @@ interface User {
     role: 'student' | 'mentor' | 'admin';
     email?: string;
     mentorCode?: string;
-    mentors?: any[];
+    mentors?: Record<string, unknown>[];
 }
-
-import { saveAuthSession, clearAuthSession, loadAuthSession } from '../utils/authStorage';
 
 interface AuthState {
     user: User | null;
@@ -47,7 +47,7 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWi
 
 export const loginUser = createAsyncThunk(
     'auth/login',
-    async (credentials: any, { rejectWithValue }) => {
+    async (credentials: Record<string, string>, { rejectWithValue }) => {
         try {
             const response = await client.post('/auth/login', credentials);
             const { access_token, user } = response.data;
@@ -56,17 +56,17 @@ export const loginUser = createAsyncThunk(
             const userWithId = { ...user, id: user.sub || user.id };
             saveAuthSession(access_token, userWithId);
             return { token: access_token, user: userWithId };
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Login failed';
-            Alert.alert('Login Error', message);
-            return rejectWithValue(message);
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            Alert.alert('Login Error', appError.message);
+            return rejectWithValue(appError.message);
         }
     }
 );
 
 export const registerUser = createAsyncThunk(
     'auth/register',
-    async (userData: any, { rejectWithValue }) => {
+    async (userData: Record<string, unknown>, { rejectWithValue }) => {
         try {
             const response = await client.post('/auth/register', userData);
             const { access_token, user } = response.data;
@@ -74,10 +74,10 @@ export const registerUser = createAsyncThunk(
             const userWithId = { ...user, id: user.sub || user.id };
             saveAuthSession(access_token, userWithId);
             return { token: access_token, user: userWithId };
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Registration failed';
-            Alert.alert('Registration Error', message);
-            return rejectWithValue(message);
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            Alert.alert('Registration Error', appError.message);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -96,12 +96,12 @@ export const fetchCurrentUser = createAsyncThunk(
                 return response.data;
             }
             return null;
-        } catch (error: any) {
-            return rejectWithValue('Failed to fetch profile');
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message || 'Failed to fetch profile');
         }
     }
 );
-
 
 export const refreshMentorCode = createAsyncThunk(
     'auth/refreshMentorCode',
@@ -116,15 +116,13 @@ export const refreshMentorCode = createAsyncThunk(
                 return response.data;
             }
             return null;
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to refresh code';
-            Alert.alert('Refresh Error', message);
-            return rejectWithValue(message);
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            Alert.alert('Refresh Error', appError.message);
+            return rejectWithValue(appError.message);
         }
     }
 );
-
-
 
 const deleteAccount = createAsyncThunk(
     'auth/deleteAccount',
@@ -139,10 +137,10 @@ const deleteAccount = createAsyncThunk(
             await clearAuthSession();
             setAuthToken(null);
             return;
-        } catch (error: any) {
-            const message = 'Failed to delete account';
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
             Alert.alert('Failed to delete account');
-            return rejectWithValue(message);
+            return rejectWithValue(appError.message);
         }
     }
 );
@@ -158,7 +156,6 @@ export const logout = createAsyncThunk(
             return;
         } catch (error) {
             console.error('Logout failed', error);
-            // Even if file deletion fails, we should clear state
             return;
         }
     }
@@ -170,14 +167,12 @@ const authSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         // Logout
-        // Logout
         builder.addCase(logout.fulfilled, (state) => {
             state.user = null;
             state.isAuthenticated = false;
             state.token = null;
         });
         builder.addCase(logout.rejected, (state) => {
-            // Force clear state even if logout fails
             state.user = null;
             state.isAuthenticated = false;
             state.token = null;
@@ -189,6 +184,7 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.token = null;
         });
+        
         // Check Auth
         builder.addCase(checkAuth.fulfilled, (state, action) => {
             if (action.payload && action.payload.token) {
