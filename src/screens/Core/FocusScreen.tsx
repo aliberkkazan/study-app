@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,6 @@ import {
     ScrollView,
     Modal,
     Alert,
-    Vibration,
     Platform,
     StatusBar,
 } from 'react-native';
@@ -16,10 +15,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Svg, { Circle } from 'react-native-svg';
 import { RootState, AppDispatch } from '../../redux/store';
 import { setActiveFocusTask, toggleTask } from '../../redux/tasksSlice';
-import { Task } from '../../api/types';
+import { recordSession } from '../../redux/sessionsSlice';
+import { Task, CreateSessionPayload } from '../../api/types';
+import { SessionResultModal } from '../../components/focus/SessionResultModal';
+import { useFocusTimer, TimerMode } from '../../hooks/useFocusTimer';
 import { t } from '../../utils/i18n';
-
-type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 
 const PRESET_DURATIONS: Record<TimerMode, number[]> = {
     focus: [15, 25, 45, 60],
@@ -27,128 +27,71 @@ const PRESET_DURATIONS: Record<TimerMode, number[]> = {
     longBreak: [15, 20, 30],
 };
 
-const DEFAULT_DURATIONS: Record<TimerMode, number> = {
-    focus: 25 * 60,
-    shortBreak: 5 * 60,
-    longBreak: 15 * 60,
-};
-
 const FocusScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const activeTask = useSelector((state: RootState) => state.tasks.activeFocusTask);
     const allTasks = useSelector((state: RootState) => state.tasks.items);
+    const sessionStats = useSelector((state: RootState) => state.sessions.stats);
 
-    const [mode, setMode] = useState<TimerMode>('focus');
-    const [selectedMinutes, setSelectedMinutes] = useState(25);
-    const [totalDuration, setTotalDuration] = useState(25 * 60);
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
-    const [isRunning, setIsRunning] = useState(false);
     const [completedSessions, setCompletedSessions] = useState(0);
     const [taskPickerVisible, setTaskPickerVisible] = useState(false);
 
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Session Result Modal state
+    const [resultModalVisible, setResultModalVisible] = useState(false);
+    const [sessionStartISO, setSessionStartISO] = useState(new Date().toISOString());
+    const [elapsedFocusMinutes, setElapsedFocusMinutes] = useState(25);
 
-    // Synchronize timer duration when mode or selected duration changes
-    const changeMode = (newMode: TimerMode, customMins?: number) => {
-        setIsRunning(false);
-        if (timerRef.current) clearInterval(timerRef.current);
+    const handleTimerComplete = useCallback(
+        (finishedMode: TimerMode, durationMins: number, startedAt: string) => {
+            if (finishedMode === 'focus') {
+                setCompletedSessions((prev) => prev + 1);
+                setSessionStartISO(startedAt);
+                setElapsedFocusMinutes(durationMins);
+                setResultModalVisible(true);
+            } else {
+                Alert.alert(
+                    '☕ Break Over!',
+                    'Ready to dive back into your next focus block?',
+                    [
+                        {
+                            text: 'Start 25m Focus',
+                            onPress: () => timer.changeMode('focus', 25),
+                        },
+                        {
+                            text: 'Dismiss',
+                            style: 'cancel',
+                        },
+                    ]
+                );
+            }
+        },
+        []
+    );
 
-        const mins = customMins ?? (newMode === 'focus' ? 25 : newMode === 'shortBreak' ? 5 : 15);
-        setMode(newMode);
-        setSelectedMinutes(mins);
-        const durationSecs = mins * 60;
-        setTotalDuration(durationSecs);
-        setTimeLeft(durationSecs);
-    };
+    const timer = useFocusTimer({
+        initialMode: 'focus',
+        initialMinutes: 25,
+        onTimerComplete: handleTimerComplete,
+    });
 
-    // Timer Interval Management
-    useEffect(() => {
-        if (isRunning) {
-            timerRef.current = setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        setIsRunning(false);
-                        handleTimerCompletion();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        } else if (timerRef.current) {
-            clearInterval(timerRef.current);
+    const handleEndSessionEarly = () => {
+        if (timer.mode !== 'focus') {
+            timer.changeMode('focus', 25);
+            return;
         }
 
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, [isRunning, mode]);
-
-    const handleTimerCompletion = () => {
-        try {
-            Vibration.vibrate([0, 500, 200, 500]);
-        } catch {
-            // Safe fallback
-        }
-
-        if (mode === 'focus') {
-            setCompletedSessions((prev) => prev + 1);
-            Alert.alert(
-                '🎉 Focus Session Completed!',
-                'Fantastic job staying concentrated! Take a well-deserved break now.',
-                [
-                    {
-                        text: 'Take 5m Break',
-                        onPress: () => changeMode('shortBreak', 5),
-                    },
-                    {
-                        text: 'Stay on Focus',
-                        onPress: () => changeMode('focus', selectedMinutes),
-                    },
-                ]
-            );
-        } else {
-            Alert.alert(
-                '☕ Break Over!',
-                'Ready to dive back into your next focus block?',
-                [
-                    {
-                        text: 'Start 25m Focus',
-                        onPress: () => changeMode('focus', 25),
-                    },
-                    {
-                        text: 'Dismiss',
-                        style: 'cancel',
-                    },
-                ]
-            );
-        }
+        const { elapsedMinutes, startedAt } = timer.endSessionEarly();
+        setSessionStartISO(startedAt);
+        setElapsedFocusMinutes(elapsedMinutes);
+        setResultModalVisible(true);
     };
 
-    const togglePlayPause = () => {
-        if (timeLeft === 0) {
-            setTimeLeft(totalDuration);
-        }
-        setIsRunning((prev) => !prev);
-    };
-
-    const resetTimer = () => {
-        setIsRunning(false);
-        setTimeLeft(totalDuration);
-    };
-
-    const addFiveMinutes = () => {
-        setTimeLeft((prev) => prev + 300);
-        setTotalDuration((prev) => Math.max(prev, timeLeft + 300));
-    };
-
-    const skipSession = () => {
-        setIsRunning(false);
-        if (mode === 'focus') {
-            changeMode('shortBreak', 5);
-        } else {
-            changeMode('focus', 25);
-        }
+    const handleSaveSessionResult = async (payload: CreateSessionPayload) => {
+        await dispatch(recordSession(payload)).unwrap();
+        Alert.alert('🎉 Great Progress!', 'Study session saved! Ready for a 5 min break?', [
+            { text: 'Take Break', onPress: () => timer.changeMode('shortBreak', 5) },
+            { text: 'Keep Focusing', onPress: () => timer.changeMode('focus', timer.selectedMinutes) },
+        ]);
     };
 
     const handleToggleTaskComplete = (task: Task) => {
@@ -170,20 +113,13 @@ const FocusScreen: React.FC = () => {
         (t) => !t.completed && t.status !== 'completed' && t.status !== 'archived'
     );
 
-    // Format time display MM:SS
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    };
-
     // Circular Progress calculations
     const svgSize = 240;
     const strokeWidth = 10;
     const radius = (svgSize - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-    const progress = totalDuration > 0 ? (totalDuration - timeLeft) / totalDuration : 0;
-    const strokeDashoffset = circumference * (1 - Math.min(1, Math.max(0, progress)));
+    const strokeDashoffset =
+        circumference * (1 - Math.min(1, Math.max(0, timer.progress)));
 
     const modeColors = {
         focus: {
@@ -211,11 +147,11 @@ const FocusScreen: React.FC = () => {
             text: '#5B21B6',
             ring: '#8B5CF6',
             label: 'Long Break',
-            icon: 'sunny',
+            icon: 'leaf',
         },
     };
 
-    const currentTheme = modeColors[mode];
+    const currentTheme = modeColors[timer.mode];
 
     return (
         <View style={styles.screen}>
@@ -230,20 +166,23 @@ const FocusScreen: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.modeTab,
-                            mode === 'focus' && { backgroundColor: '#FFFFFF', shadowOpacity: 0.08 },
+                            timer.mode === 'focus' && {
+                                backgroundColor: '#FFFFFF',
+                                shadowOpacity: 0.08,
+                            },
                         ]}
-                        onPress={() => changeMode('focus', 25)}
+                        onPress={() => timer.changeMode('focus', 25)}
                         activeOpacity={0.8}
                     >
                         <Ionicons
                             name="flame"
                             size={16}
-                            color={mode === 'focus' ? '#2563EB' : '#94A3B8'}
+                            color={timer.mode === 'focus' ? '#2563EB' : '#94A3B8'}
                         />
                         <Text
                             style={[
                                 styles.modeTabText,
-                                mode === 'focus' && { color: '#1E293B', fontWeight: '700' },
+                                timer.mode === 'focus' && { color: '#1E293B', fontWeight: '700' },
                             ]}
                         >
                             Focus
@@ -253,23 +192,26 @@ const FocusScreen: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.modeTab,
-                            mode === 'shortBreak' && {
+                            timer.mode === 'shortBreak' && {
                                 backgroundColor: '#FFFFFF',
                                 shadowOpacity: 0.08,
                             },
                         ]}
-                        onPress={() => changeMode('shortBreak', 5)}
+                        onPress={() => timer.changeMode('shortBreak', 5)}
                         activeOpacity={0.8}
                     >
                         <Ionicons
                             name="cafe"
                             size={16}
-                            color={mode === 'shortBreak' ? '#059669' : '#94A3B8'}
+                            color={timer.mode === 'shortBreak' ? '#059669' : '#94A3B8'}
                         />
                         <Text
                             style={[
                                 styles.modeTabText,
-                                mode === 'shortBreak' && { color: '#1E293B', fontWeight: '700' },
+                                timer.mode === 'shortBreak' && {
+                                    color: '#1E293B',
+                                    fontWeight: '700',
+                                },
                             ]}
                         >
                             Short Break
@@ -279,23 +221,26 @@ const FocusScreen: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.modeTab,
-                            mode === 'longBreak' && {
+                            timer.mode === 'longBreak' && {
                                 backgroundColor: '#FFFFFF',
                                 shadowOpacity: 0.08,
                             },
                         ]}
-                        onPress={() => changeMode('longBreak', 15)}
+                        onPress={() => timer.changeMode('longBreak', 15)}
                         activeOpacity={0.8}
                     >
                         <Ionicons
                             name="leaf"
                             size={16}
-                            color={mode === 'longBreak' ? '#7C3AED' : '#94A3B8'}
+                            color={timer.mode === 'longBreak' ? '#7C3AED' : '#94A3B8'}
                         />
                         <Text
                             style={[
                                 styles.modeTabText,
-                                mode === 'longBreak' && { color: '#1E293B', fontWeight: '700' },
+                                timer.mode === 'longBreak' && {
+                                    color: '#1E293B',
+                                    fontWeight: '700',
+                                },
                             ]}
                         >
                             Long Break
@@ -402,25 +347,25 @@ const FocusScreen: React.FC = () => {
                 )}
 
                 {/* Duration Presets (Only visible when paused) */}
-                {!isRunning && (
+                {!timer.isRunning && (
                     <View style={styles.presetsRow}>
-                        {PRESET_DURATIONS[mode].map((mins) => (
+                        {PRESET_DURATIONS[timer.mode].map((mins) => (
                             <TouchableOpacity
                                 key={mins}
                                 style={[
                                     styles.presetChip,
-                                    selectedMinutes === mins && {
+                                    timer.selectedMinutes === mins && {
                                         backgroundColor: currentTheme.light,
                                         borderColor: currentTheme.border,
                                     },
                                 ]}
-                                onPress={() => changeMode(mode, mins)}
+                                onPress={() => timer.changeMode(timer.mode, mins)}
                                 activeOpacity={0.7}
                             >
                                 <Text
                                     style={[
                                         styles.presetChipText,
-                                        selectedMinutes === mins && {
+                                        timer.selectedMinutes === mins && {
                                             color: currentTheme.text,
                                             fontWeight: '700',
                                         },
@@ -486,10 +431,10 @@ const FocusScreen: React.FC = () => {
                             </Text>
                         </View>
 
-                        <Text style={styles.timeDigit}>{formatTime(timeLeft)}</Text>
+                        <Text style={styles.timeDigit}>{timer.formattedTime}</Text>
 
                         <Text style={styles.timerSubStatus}>
-                            {isRunning ? 'Session in progress' : 'Ready to start'}
+                            {timer.isRunning ? 'Session in progress' : 'Ready to start'}
                         </Text>
                     </View>
                 </View>
@@ -499,7 +444,7 @@ const FocusScreen: React.FC = () => {
                     {/* Reset Button */}
                     <TouchableOpacity
                         style={styles.secondaryBtn}
-                        onPress={resetTimer}
+                        onPress={timer.resetTimer}
                         activeOpacity={0.7}
                     >
                         <Ionicons name="refresh" size={20} color="#64748B" />
@@ -509,34 +454,53 @@ const FocusScreen: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.primaryPlayBtn,
-                            { backgroundColor: isRunning ? '#0F172A' : currentTheme.primary },
+                            {
+                                backgroundColor: timer.isRunning
+                                    ? '#0F172A'
+                                    : currentTheme.primary,
+                            },
                         ]}
-                        onPress={togglePlayPause}
+                        onPress={timer.togglePlayPause}
                         activeOpacity={0.85}
                     >
                         <Ionicons
-                            name={isRunning ? 'pause' : 'play'}
+                            name={timer.isRunning ? 'pause' : 'play'}
                             size={28}
                             color="#FFFFFF"
-                            style={isRunning ? {} : { marginLeft: 3 }}
+                            style={timer.isRunning ? {} : { marginLeft: 3 }}
                         />
                     </TouchableOpacity>
 
                     {/* Skip / Next Mode Button */}
                     <TouchableOpacity
                         style={styles.secondaryBtn}
-                        onPress={skipSession}
+                        onPress={timer.skipSession}
                         activeOpacity={0.7}
                     >
                         <Ionicons name="play-forward" size={20} color="#64748B" />
                     </TouchableOpacity>
                 </View>
 
+                {/* End Session Early & Log Button (when timer has been running) */}
+                {timer.mode === 'focus' &&
+                    (timer.timeLeft < timer.totalDuration || timer.isRunning) && (
+                        <TouchableOpacity
+                            style={styles.endEarlyBtn}
+                            onPress={handleEndSessionEarly}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="flag-outline" size={15} color="#2563EB" />
+                            <Text style={styles.endEarlyBtnText}>
+                                End Session & Save Reflection
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
                 {/* Quick +5 Mins Pill (When running) */}
-                {isRunning && (
+                {timer.isRunning && (
                     <TouchableOpacity
                         style={styles.addFiveBtn}
-                        onPress={addFiveMinutes}
+                        onPress={() => timer.addTime(300)}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="add" size={14} color="#2563EB" />
@@ -549,7 +513,9 @@ const FocusScreen: React.FC = () => {
                     <View style={styles.statItem}>
                         <Ionicons name="checkmark-done-circle" size={22} color="#10B981" />
                         <View style={styles.statInfo}>
-                            <Text style={styles.statNumber}>{completedSessions}</Text>
+                            <Text style={styles.statNumber}>
+                                {completedSessions || sessionStats.totalSessionsCount}
+                            </Text>
                             <Text style={styles.statLabel}>Rounds Done</Text>
                         </View>
                     </View>
@@ -557,8 +523,10 @@ const FocusScreen: React.FC = () => {
                     <View style={styles.statItem}>
                         <Ionicons name="time" size={22} color="#3B82F6" />
                         <View style={styles.statInfo}>
-                            <Text style={styles.statNumber}>{completedSessions * 25}m</Text>
-                            <Text style={styles.statLabel}>Total Focus</Text>
+                            <Text style={styles.statNumber}>
+                                {sessionStats.dailyTotalMinutes || completedSessions * 25}m
+                            </Text>
+                            <Text style={styles.statLabel}>Total Focus Today</Text>
                         </View>
                     </View>
                 </View>
@@ -634,6 +602,17 @@ const FocusScreen: React.FC = () => {
                     </View>
                 </View>
             </Modal>
+
+            {/* Session Result & Reflection Modal */}
+            <SessionResultModal
+                visible={resultModalVisible}
+                task={activeTask}
+                durationMinutes={elapsedFocusMinutes}
+                startedAt={sessionStartISO}
+                endedAt={new Date().toISOString()}
+                onClose={() => setResultModalVisible(false)}
+                onSubmit={handleSaveSessionResult}
+            />
         </View>
     );
 };
@@ -915,6 +894,23 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 5,
     },
+    endEarlyBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EFF6FF',
+        borderWidth: 1,
+        borderColor: '#BFDBFE',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 12,
+        marginTop: 18,
+        gap: 6,
+    },
+    endEarlyBtnText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#2563EB',
+    },
     addFiveBtn: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -922,7 +918,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
-        marginTop: 18,
+        marginTop: 12,
         gap: 4,
     },
     addFiveText: {
@@ -938,7 +934,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderWidth: 1,
         borderColor: '#E2E8F0',
-        marginTop: 28,
+        marginTop: 24,
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.04,

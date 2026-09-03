@@ -56,3 +56,58 @@ export interface UpdateTaskPayload {
     completed?: boolean;
     status?: TaskStatus;
 }
+
+export type SessionMood = 'great' | 'good' | 'tired' | 'neutral';
+
+export interface StudySession {
+    id: string;
+    taskId?: string;
+    taskTitle?: string;
+    courseName?: string;
+    topicName?: string;
+    durationMinutes: number;
+    startedAt: string; // ISO string
+    endedAt: string;   // ISO string
+    questionsSolved?: number;
+    correctCount?: number;
+    incorrectCount?: number;
+    notes?: string;
+    mood?: SessionMood;
+    proofPhotoUri?: string;
+    createdAt: string;
+}
+
+export interface CreateSessionPayload {
+    taskId?: string;
+    taskTitle?: string;
+    courseName?: string;
+    topicName?: string;
+    durationMinutes: number;
+    startedAt: string;
+    endedAt: string;
+    questionsSolved?: number;
+    correctCount?: number;
+    incorrectCount?: number;
+    notes?: string;
+    mood?: SessionMood;
+    proofPhotoUri?: string;
+    markTaskCompleted?: boolean;
+}
+
+export interface SubjectDistribution {
+    courseName: string;
+    totalMinutes: number;
+    percentage: number;
+    color: string;
+}
+
+export interface SessionStats {
+    dailyTotalMinutes: number;
+    weeklyTotalMinutes: number;
+    totalQuestionsSolved: number;
+    totalCorrect: number;
+    totalIncorrect: number;
+    accuracyRate: number; // 0-100 %
+    totalSessionsCount: number;
+    subjectDistribution: SubjectDistribution[];
+}

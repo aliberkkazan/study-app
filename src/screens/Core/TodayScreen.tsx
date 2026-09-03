@@ -11,6 +11,8 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from '../../navigators/MainTabNavigator';
 import { RootState, AppDispatch } from '../../redux/store';
 import {
     fetchTasks,
@@ -30,7 +32,7 @@ import { getLocalDateString, normalizeDateString } from '../../utils/date';
 
 const TodayScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
     const { items, selectedCategory, loading, error } = useSelector(
         (state: RootState) => state.tasks

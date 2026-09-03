@@ -5,7 +5,14 @@ import { getTabBarIcon } from './navigationUtils';
 import { t } from '../utils/i18n';
 import { ProfileSettingsHeader } from '../components';
 
-const Tab = createBottomTabNavigator();
+export type MainTabParamList = {
+    Today: undefined;
+    Focus: undefined;
+    Progress: undefined;
+    Profile: undefined;
+};
+
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabNavigator = () => {
     return (
