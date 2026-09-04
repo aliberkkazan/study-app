@@ -22,31 +22,44 @@ export const handleApiError = (error: unknown): AppError => {
         const status = axiosError.response?.status;
         const data = axiosError.response?.data;
 
-        let message = t('common.error');
+        const requestUrl = axiosError.config?.url || '';
+        const backendMessage = Array.isArray(data?.message)
+            ? (data.message as string[]).join(', ')
+            : data?.message;
+
+        let message = backendMessage || t('common.error');
 
         if (status) {
+            const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
             switch (status) {
                 case 400:
-                    message = data?.message || 'Validation Error';
+                    message = backendMessage || 'Validation Error';
                     break;
                 case 401:
-                    message = 'Session expired. Please login again.';
+                    if (backendMessage) {
+                        message = backendMessage;
+                    } else if (isAuthEndpoint) {
+                        message = 'Invalid credentials';
+                    } else {
+                        message = 'Session expired. Please login again.';
+                    }
                     break;
                 case 403:
-                    message = 'You do not have permission for this action.';
+                    message = backendMessage || 'You do not have permission for this action.';
                     break;
                 case 404:
-                    message = 'Resource not found.';
+                    message = backendMessage || 'Resource not found.';
                     break;
                 case 409:
-                    message = 'Conflict. Request already processed.';
+                    message = backendMessage || 'Conflict. Request already processed.';
                     break;
                 case 422:
-                    message = 'Invalid or missing data.';
+                    message = backendMessage || 'Invalid or missing data.';
                     break;
                 default:
                     if (status >= 500) {
-                        message = 'Server error. Please try again later.';
+                        message = backendMessage || 'Server error. Please try again later.';
                     }
                     break;
             }

@@ -111,3 +111,52 @@ export interface SessionStats {
     totalSessionsCount: number;
     subjectDistribution: SubjectDistribution[];
 }
+
+// Accountability & Access Grants
+export type AccessScope = 'PARTNER' | 'PARENT' | 'MENTOR' | 'INSTITUTION';
+export type AccessGrantStatus = 'INVITED' | 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+
+export interface GrantPermissions {
+    canAssignTasks?: boolean;
+    canViewResults?: boolean;
+    canVerifySessions?: boolean;
+    canGiveFeedback?: boolean;
+}
+
+export interface AccessGrant {
+    id: string;
+    granterId: string;
+    granter?: { id: string; name?: string; email?: string };
+    granteeId?: string;
+    grantee?: { id: string; name?: string; email?: string };
+    scope: AccessScope;
+    status: AccessGrantStatus;
+    inviteCode: string;
+    inviteEmail?: string;
+    permissions?: GrantPermissions;
+    expiresAt?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateInvitePayload {
+    scope?: AccessScope;
+    inviteEmail?: string;
+    permissions?: Partial<GrantPermissions>;
+    expiresAt?: string;
+}
+
+export interface CreateInviteResponse extends AccessGrant {
+    userExists?: boolean;
+    targetUser?: { id: string; name?: string; email?: string } | null;
+}
+
+export interface AcceptInvitePayload {
+    inviteCode?: string;
+    grantId?: string;
+}
+
+export interface CreateShareTokenPayload {
+    timeframe: 'LAST_7_DAYS' | 'LAST_30_DAYS' | 'ALL_TIME';
+    durationDays?: number;
+}

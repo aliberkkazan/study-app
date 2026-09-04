@@ -14,7 +14,9 @@ import {
     ProfileScreen,
     JoinMentorScreen,
     MentorRequestsScreen,
-    ProfileSettings
+    ProfileSettings,
+    ExamSelectionScreen,
+    RoadmapScreen,
 } from '@screens';
 import { ProfileSettingsHeader } from '../components';
 import React from 'react';
@@ -57,6 +59,22 @@ export const COMMON_STACK_ROUTES: RouteConfig[] = [
             headerShown: true,
             title: 'Profile Settings'
         }
+    },
+    {
+        name: 'ExamSelection',
+        component: ExamSelectionScreen,
+        options: {
+            headerShown: true,
+            title: 'Hedef ve Sınav Seçimi',
+        },
+    },
+    {
+        name: 'Roadmap',
+        component: RoadmapScreen,
+        options: {
+            headerShown: true,
+            title: 'Çalışma Yol Haritası',
+        },
     },
 ];
 

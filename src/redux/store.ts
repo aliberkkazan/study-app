@@ -4,6 +4,7 @@ import authReducer from './authSlice';
 import dataReducer from './dataSlice';
 import tasksReducer from './tasksSlice';
 import sessionsReducer from './sessionsSlice';
+import roadmapReducer from './roadmapSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     data: dataReducer,
     tasks: tasksReducer,
     sessions: sessionsReducer,
+    roadmap: roadmapReducer,
   },
 });
 

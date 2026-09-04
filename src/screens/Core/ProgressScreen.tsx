@@ -17,7 +17,7 @@ import { fetchTasks } from '../../redux/tasksSlice';
 import { ViewState } from '../../components/common/ViewState';
 import { OfflineWarning } from '../../components/common/OfflineWarning';
 import { formatDisplayDate } from '../../utils/date';
-import { t } from '../../utils/i18n';
+import { t, getLanguage, translateCourseName } from '../../utils/i18n';
 
 const ProgressScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -52,19 +52,22 @@ const ProgressScreen: React.FC = () => {
     const taskCompletionRate =
         totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
-    // Format minutes to "Xh Ym" or "Xm"
+    // Format minutes to "Xh Ym" / "Xsa Ydk" or "Xm" / "Xdk"
     const formatDuration = (mins: number) => {
-        if (!mins || mins === 0) return '0m';
+        const lang = getLanguage();
+        const mUnit = lang === 'tr' ? 'dk' : 'm';
+        const hUnit = lang === 'tr' ? 'sa' : 'h';
+        if (!mins || mins === 0) return `0${mUnit}`;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
-        if (h > 0 && m > 0) return `${h}h ${m}m`;
-        if (h > 0) return `${h}h`;
-        return `${m}m`;
+        if (h > 0 && m > 0) return `${h}${hUnit} ${m}${mUnit}`;
+        if (h > 0) return `${h}${hUnit}`;
+        return `${m}${mUnit}`;
     };
 
     const renderHeader = () => (
         <View style={styles.headerSection}>
-            <Text style={styles.screenSubtitle}>Study Analytics</Text>
+            <Text style={styles.screenSubtitle}>{t('progress.analyticsSubtitle')}</Text>
             <Text style={styles.screenTitle}>{t('nav.progress')}</Text>
         </View>
     );
@@ -96,7 +99,7 @@ const ProgressScreen: React.FC = () => {
                                 <View style={[styles.metricIconWrap, { backgroundColor: '#DBEAFE' }]}>
                                     <Ionicons name="flame" size={18} color="#2563EB" />
                                 </View>
-                                <Text style={styles.metricCardBadge}>Today</Text>
+                                <Text style={styles.metricCardBadge}>{t('progress.today')}</Text>
                             </View>
                             <Text style={styles.metricNumber}>{formatDuration(stats.dailyTotalMinutes)}</Text>
                             <Text style={styles.metricLabel}>{t('progress.dailyTotal')}</Text>
@@ -109,7 +112,7 @@ const ProgressScreen: React.FC = () => {
                                     <Ionicons name="calendar" size={18} color="#7C3AED" />
                                 </View>
                                 <Text style={[styles.metricCardBadge, { color: '#7C3AED', backgroundColor: '#F5F3FF' }]}>
-                                    7 Days
+                                    {t('progress.sevenDays')}
                                 </Text>
                             </View>
                             <Text style={styles.metricNumber}>{formatDuration(stats.weeklyTotalMinutes)}</Text>
@@ -124,7 +127,7 @@ const ProgressScreen: React.FC = () => {
                                 </View>
                             </View>
                             <Text style={styles.metricNumber}>{stats.totalQuestionsSolved}</Text>
-                            <Text style={styles.metricLabel}>Questions Solved</Text>
+                            <Text style={styles.metricLabel}>{t('progress.questionsSolved')}</Text>
                         </View>
 
                         {/* Accuracy Rate Card */}
@@ -142,7 +145,7 @@ const ProgressScreen: React.FC = () => {
                             <Text style={styles.metricNumber}>
                                 {stats.totalCorrect}/{stats.totalQuestionsSolved || 0}
                             </Text>
-                            <Text style={styles.metricLabel}>Correct Accuracy</Text>
+                            <Text style={styles.metricLabel}>{t('progress.correctAccuracy')}</Text>
                         </View>
                     </View>
 
@@ -154,7 +157,7 @@ const ProgressScreen: React.FC = () => {
                                 <Text style={styles.cardSectionTitle}>{t('progress.completionRate')}</Text>
                             </View>
                             <Text style={styles.cardSectionStat}>
-                                {completedTasksCount}/{totalTasksCount} tasks ({taskCompletionRate}%)
+                                {completedTasksCount}/{totalTasksCount} {t('progress.tasks')} ({taskCompletionRate}%)
                             </Text>
                         </View>
 
@@ -174,7 +177,7 @@ const ProgressScreen: React.FC = () => {
                             <View style={styles.cardSectionHeader}>
                                 <View style={styles.cardTitleWithIcon}>
                                     <Ionicons name="pie-chart-outline" size={18} color="#7C3AED" />
-                                    <Text style={styles.cardSectionTitle}>Subject Distribution</Text>
+                                    <Text style={styles.cardSectionTitle}>{t('progress.subjectBreakdown')}</Text>
                                 </View>
                             </View>
 
@@ -211,7 +214,7 @@ const ProgressScreen: React.FC = () => {
                                                     { backgroundColor: sub.color },
                                                 ]}
                                             />
-                                            <Text style={styles.legendName}>{sub.courseName}</Text>
+                                            <Text style={styles.legendName}>{translateCourseName(sub.courseName)}</Text>
                                         </View>
                                         <View style={styles.legendRight}>
                                             <Text style={styles.legendDuration}>
@@ -239,9 +242,9 @@ const ProgressScreen: React.FC = () => {
                         {sessions.length === 0 ? (
                             <View style={styles.emptyHistoryCard}>
                                 <Ionicons name="timer-outline" size={40} color="#CBD5E1" />
-                                <Text style={styles.emptyHistoryTitle}>No focus sessions logged yet</Text>
+                                <Text style={styles.emptyHistoryTitle}>{t('progress.emptyTitle')}</Text>
                                 <Text style={styles.emptyHistorySub}>
-                                    Complete a study block in the Focus tab to see detailed reflection and stats here.
+                                    {t('progress.emptySub')}
                                 </Text>
                             </View>
                         ) : (
@@ -251,7 +254,7 @@ const ProgressScreen: React.FC = () => {
                                         <View style={styles.sessionCardMetaLeft}>
                                             <View style={styles.courseBadge}>
                                                 <Text style={styles.courseBadgeText}>
-                                                    {session.courseName || 'Study Session'}
+                                                    {translateCourseName(session.courseName)}
                                                 </Text>
                                             </View>
                                             {session.topicName ? (
@@ -262,7 +265,7 @@ const ProgressScreen: React.FC = () => {
                                         <View style={styles.durationPill}>
                                             <Ionicons name="timer-outline" size={12} color="#2563EB" />
                                             <Text style={styles.durationPillText}>
-                                                {session.durationMinutes}m
+                                                {session.durationMinutes}{getLanguage() === 'tr' ? 'dk' : 'm'}
                                             </Text>
                                         </View>
                                     </View>
@@ -301,7 +304,7 @@ const ProgressScreen: React.FC = () => {
                                             <View style={styles.sessionScoreTag}>
                                                 <Ionicons name="checkmark-circle" size={13} color="#10B981" />
                                                 <Text style={styles.sessionScoreText}>
-                                                    {session.correctCount ?? session.questionsSolved}/{session.questionsSolved} correct
+                                                    {session.correctCount ?? session.questionsSolved}/{session.questionsSolved} {t('progress.correctLabel')}
                                                 </Text>
                                             </View>
                                         ) : null}

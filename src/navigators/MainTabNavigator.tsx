@@ -20,7 +20,7 @@ const MainTabNavigator = () => {
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                     // Map routes to existing icons in navigationUtils or provide custom ones
-                    let iconName = route.name;
+                    let iconName: string = route.name;
                     if (route.name === 'Today') iconName = 'Program'; // reuse calendar icon
                     if (route.name === 'Focus') iconName = 'Pomodoro'; // reuse timer icon
                     if (route.name === 'Progress') iconName = 'My Submissions'; // reuse chart icon

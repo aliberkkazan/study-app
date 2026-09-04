@@ -32,10 +32,13 @@ import { getLocalDateString, normalizeDateString } from '../../utils/date';
 
 const TodayScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+    const navigation = useNavigation<any>();
 
     const { items, selectedCategory, loading, error } = useSelector(
         (state: RootState) => state.tasks
+    );
+    const { selectedExam, targetTrack, targetScore } = useSelector(
+        (state: RootState) => state.roadmap
     );
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -161,6 +164,47 @@ const TodayScreen: React.FC = () => {
                     <Text style={styles.quickAddHeaderText}>{t('common.add')}</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Roadmap / Goal Banner */}
+            {selectedExam && selectedExam !== 'none' ? (
+                <TouchableOpacity
+                    style={styles.roadmapActiveBanner}
+                    onPress={() => navigation.navigate('Roadmap')}
+                    activeOpacity={0.85}
+                >
+                    <View style={styles.roadmapBannerLeft}>
+                        <View style={styles.roadmapCompassCircle}>
+                            <Ionicons name="compass" size={20} color="#2563EB" />
+                        </View>
+                        <View>
+                            <Text style={styles.roadmapBannerTitle}>
+                                {selectedExam === 'yks'
+                                    ? `YKS (${targetTrack?.toUpperCase() || 'SAYISAL'})`
+                                    : 'Digital SAT'}
+                            </Text>
+                            <Text style={styles.roadmapBannerSubtitle}>
+                                {targetScore ? `Hedef: ${targetScore}` : 'Haftalık programı gör'}
+                            </Text>
+                        </View>
+                    </View>
+                    <View style={styles.roadmapGoBtn}>
+                        <Text style={styles.roadmapGoText}>{t('roadmap.viewRoadmap')}</Text>
+                        <Ionicons name="arrow-forward" size={14} color="#2563EB" />
+                    </View>
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity
+                    style={styles.roadmapSetupPrompt}
+                    onPress={() => navigation.navigate('ExamSelection')}
+                    activeOpacity={0.85}
+                >
+                    <View style={styles.roadmapSetupPromptLeft}>
+                        <Ionicons name="school-outline" size={18} color="#475569" />
+                        <Text style={styles.roadmapSetupText}>{t('roadmap.bannerPrompt')}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+                </TouchableOpacity>
+            )}
 
             {/* Daily Overview Card */}
             <View style={styles.overviewCard}>
@@ -393,6 +437,76 @@ const styles = StyleSheet.create({
         color: '#2563EB',
         fontWeight: '700',
         fontSize: 14,
+    },
+    roadmapActiveBanner: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#EFF6FF',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+        borderWidth: 1.5,
+        borderColor: '#BFDBFE',
+    },
+    roadmapBannerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    roadmapCompassCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#DBEAFE',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    roadmapBannerTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1E3A8A',
+    },
+    roadmapBannerSubtitle: {
+        fontSize: 12,
+        color: '#3B82F6',
+        marginTop: 2,
+    },
+    roadmapGoBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#DBEAFE',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    roadmapGoText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#1D4ED8',
+    },
+    roadmapSetupPrompt: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    roadmapSetupPromptLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    roadmapSetupText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#475569',
     },
 });
 

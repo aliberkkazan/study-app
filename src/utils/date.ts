@@ -1,3 +1,5 @@
+import { getLanguage } from './i18n';
+
 /**
  * Date and timezone helper utilities for mobile client.
  * Ensures consistent local-date handling across different timezones.
@@ -81,7 +83,7 @@ export const isYesterday = (dateInput?: string | Date | null): boolean => {
 
 /**
  * Formats a date into a clean, human-readable, localized string.
- * Example outputs: "Today", "Tomorrow", "Yesterday", "Aug 24", "Aug 24, 2026"
+ * Example outputs: "Today" / "Bugün", "Tomorrow" / "Yarın", "Yesterday" / "Dün", "24 Ağu", "24 Ağu 2026"
  */
 export const formatDisplayDate = (
     dateInput?: string | Date | null,
@@ -89,14 +91,16 @@ export const formatDisplayDate = (
 ): string => {
     if (!dateInput) return '';
 
+    const lang = getLanguage();
+
     if (isToday(dateInput)) {
-        return 'Today';
+        return lang === 'tr' ? 'Bugün' : 'Today';
     }
     if (isTomorrow(dateInput)) {
-        return 'Tomorrow';
+        return lang === 'tr' ? 'Yarın' : 'Tomorrow';
     }
     if (isYesterday(dateInput)) {
-        return 'Yesterday';
+        return lang === 'tr' ? 'Dün' : 'Yesterday';
     }
 
     let parsedDate: Date;
@@ -117,7 +121,7 @@ export const formatDisplayDate = (
     const currentYear = new Date().getFullYear();
     const showYear = options.includeYear ?? (parsedDate.getFullYear() !== currentYear);
 
-    return parsedDate.toLocaleDateString(options.locale || undefined, {
+    return parsedDate.toLocaleDateString(options.locale || (lang === 'tr' ? 'tr-TR' : 'en-US'), {
         month: 'short',
         day: 'numeric',
         year: showYear ? 'numeric' : undefined,

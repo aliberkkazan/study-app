@@ -41,6 +41,8 @@ const FocusScreen: React.FC = () => {
     const [sessionStartISO, setSessionStartISO] = useState(new Date().toISOString());
     const [elapsedFocusMinutes, setElapsedFocusMinutes] = useState(25);
 
+    const timerRef = React.useRef<any>(null);
+
     const handleTimerComplete = useCallback(
         (finishedMode: TimerMode, durationMins: number, startedAt: string) => {
             if (finishedMode === 'focus') {
@@ -50,15 +52,15 @@ const FocusScreen: React.FC = () => {
                 setResultModalVisible(true);
             } else {
                 Alert.alert(
-                    '☕ Break Over!',
-                    'Ready to dive back into your next focus block?',
+                    t('focus.breakOverTitle'),
+                    t('focus.breakOverMsg'),
                     [
                         {
-                            text: 'Start 25m Focus',
-                            onPress: () => timer.changeMode('focus', 25),
+                            text: t('focus.start25Focus'),
+                            onPress: () => timerRef.current?.changeMode('focus', 25),
                         },
                         {
-                            text: 'Dismiss',
+                            text: t('focus.dismiss'),
                             style: 'cancel',
                         },
                     ]
@@ -73,6 +75,7 @@ const FocusScreen: React.FC = () => {
         initialMinutes: 25,
         onTimerComplete: handleTimerComplete,
     });
+    timerRef.current = timer;
 
     const handleEndSessionEarly = () => {
         if (timer.mode !== 'focus') {
@@ -88,9 +91,9 @@ const FocusScreen: React.FC = () => {
 
     const handleSaveSessionResult = async (payload: CreateSessionPayload) => {
         await dispatch(recordSession(payload)).unwrap();
-        Alert.alert('🎉 Great Progress!', 'Study session saved! Ready for a 5 min break?', [
-            { text: 'Take Break', onPress: () => timer.changeMode('shortBreak', 5) },
-            { text: 'Keep Focusing', onPress: () => timer.changeMode('focus', timer.selectedMinutes) },
+        Alert.alert(t('focus.greatProgressTitle'), t('focus.greatProgressMsg'), [
+            { text: t('focus.takeBreak'), onPress: () => timer.changeMode('shortBreak', 5) },
+            { text: t('focus.keepFocusing'), onPress: () => timer.changeMode('focus', timer.selectedMinutes) },
         ]);
     };
 
@@ -128,7 +131,7 @@ const FocusScreen: React.FC = () => {
             border: '#BFDBFE',
             text: '#1E40AF',
             ring: '#3B82F6',
-            label: 'Focus Session',
+            label: t('focus.session'),
             icon: 'flame',
         },
         shortBreak: {
@@ -137,7 +140,7 @@ const FocusScreen: React.FC = () => {
             border: '#A7F3D0',
             text: '#065F46',
             ring: '#10B981',
-            label: 'Short Break',
+            label: t('focus.shortBreak'),
             icon: 'cafe',
         },
         longBreak: {
@@ -146,7 +149,7 @@ const FocusScreen: React.FC = () => {
             border: '#DDD6FE',
             text: '#5B21B6',
             ring: '#8B5CF6',
-            label: 'Long Break',
+            label: t('focus.longBreak'),
             icon: 'leaf',
         },
     };
@@ -185,7 +188,7 @@ const FocusScreen: React.FC = () => {
                                 timer.mode === 'focus' && { color: '#1E293B', fontWeight: '700' },
                             ]}
                         >
-                            Focus
+                            {t('focus.focus')}
                         </Text>
                     </TouchableOpacity>
 
@@ -214,7 +217,7 @@ const FocusScreen: React.FC = () => {
                                 },
                             ]}
                         >
-                            Short Break
+                            {t('focus.shortBreak')}
                         </Text>
                     </TouchableOpacity>
 
@@ -243,7 +246,7 @@ const FocusScreen: React.FC = () => {
                                 },
                             ]}
                         >
-                            Long Break
+                            {t('focus.longBreak')}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -254,7 +257,7 @@ const FocusScreen: React.FC = () => {
                         <View style={styles.activeTaskTop}>
                             <View style={styles.activeTaskTag}>
                                 <Ionicons name="sparkles" size={13} color="#2563EB" />
-                                <Text style={styles.activeTaskTagText}>Focused Task</Text>
+                                <Text style={styles.activeTaskTagText}>{t('focus.focusedTask')}</Text>
                             </View>
                             <TouchableOpacity
                                 style={styles.clearTaskBtn}
@@ -318,8 +321,8 @@ const FocusScreen: React.FC = () => {
                                 ]}
                             >
                                 {activeTask.completed
-                                    ? 'Completed!'
-                                    : 'Mark this task as completed'}
+                                    ? t('focus.completed')
+                                    : t('focus.markComplete')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -335,10 +338,10 @@ const FocusScreen: React.FC = () => {
                             </View>
                             <View>
                                 <Text style={styles.selectTaskPromptTitle}>
-                                    Link a Task to Focus On
+                                    {t('focus.linkTaskPrompt')}
                                 </Text>
                                 <Text style={styles.selectTaskPromptSub}>
-                                    Select from your scheduled tasks or focus freely
+                                    {t('focus.linkTaskSub')}
                                 </Text>
                             </View>
                         </View>
@@ -371,7 +374,7 @@ const FocusScreen: React.FC = () => {
                                         },
                                     ]}
                                 >
-                                    {mins} min
+                                    {mins} {t('focus.min')}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -434,7 +437,7 @@ const FocusScreen: React.FC = () => {
                         <Text style={styles.timeDigit}>{timer.formattedTime}</Text>
 
                         <Text style={styles.timerSubStatus}>
-                            {timer.isRunning ? 'Session in progress' : 'Ready to start'}
+                            {timer.isRunning ? t('focus.inProgress') : t('focus.ready')}
                         </Text>
                     </View>
                 </View>
@@ -491,7 +494,7 @@ const FocusScreen: React.FC = () => {
                         >
                             <Ionicons name="flag-outline" size={15} color="#2563EB" />
                             <Text style={styles.endEarlyBtnText}>
-                                End Session & Save Reflection
+                                {t('focus.endAndSave')}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -504,7 +507,7 @@ const FocusScreen: React.FC = () => {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="add" size={14} color="#2563EB" />
-                        <Text style={styles.addFiveText}>+5 Minutes</Text>
+                        <Text style={styles.addFiveText}>{t('focus.addFive')}</Text>
                     </TouchableOpacity>
                 )}
 
@@ -516,7 +519,7 @@ const FocusScreen: React.FC = () => {
                             <Text style={styles.statNumber}>
                                 {completedSessions || sessionStats.totalSessionsCount}
                             </Text>
-                            <Text style={styles.statLabel}>Rounds Done</Text>
+                            <Text style={styles.statLabel}>{t('focus.roundsDone')}</Text>
                         </View>
                     </View>
                     <View style={styles.statDivider} />
@@ -524,9 +527,9 @@ const FocusScreen: React.FC = () => {
                         <Ionicons name="time" size={22} color="#3B82F6" />
                         <View style={styles.statInfo}>
                             <Text style={styles.statNumber}>
-                                {sessionStats.dailyTotalMinutes || completedSessions * 25}m
+                                {sessionStats.dailyTotalMinutes || completedSessions * 25}{t('focus.min')}
                             </Text>
-                            <Text style={styles.statLabel}>Total Focus Today</Text>
+                            <Text style={styles.statLabel}>{t('focus.totalFocusToday')}</Text>
                         </View>
                     </View>
                 </View>
@@ -542,7 +545,7 @@ const FocusScreen: React.FC = () => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Choose a Task to Focus On</Text>
+                            <Text style={styles.modalTitle}>{t('focus.chooseTask')}</Text>
                             <TouchableOpacity
                                 onPress={() => setTaskPickerVisible(false)}
                                 style={styles.modalCloseBtn}
@@ -556,10 +559,10 @@ const FocusScreen: React.FC = () => {
                                 <View style={styles.emptyTaskModal}>
                                     <Ionicons name="sparkles-outline" size={36} color="#CBD5E1" />
                                     <Text style={styles.emptyTaskModalText}>
-                                        No pending tasks found.
+                                        {t('focus.noPendingTasks')}
                                     </Text>
                                     <Text style={styles.emptyTaskModalSub}>
-                                        You can still run the focus timer freely!
+                                        {t('focus.runFreely')}
                                     </Text>
                                 </View>
                             ) : (

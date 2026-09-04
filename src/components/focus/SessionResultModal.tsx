@@ -26,11 +26,11 @@ interface Props {
     onSubmit: (payload: CreateSessionPayload) => Promise<void>;
 }
 
-const MOOD_OPTIONS: { mood: SessionMood; label: string; icon: string; color: string }[] = [
-    { mood: 'great', label: 'Energized', icon: 'flame', color: '#F59E0B' },
-    { mood: 'good', label: 'Focused', icon: 'sparkles', color: '#3B82F6' },
-    { mood: 'neutral', label: 'Normal', icon: 'checkmark-circle', color: '#10B981' },
-    { mood: 'tired', label: 'Tired', icon: 'bed', color: '#8B5CF6' },
+const getMoodOptions = (): { mood: SessionMood; label: string; icon: string; color: string }[] => [
+    { mood: 'great', label: t('focus.moodEnergized'), icon: 'flame', color: '#F59E0B' },
+    { mood: 'good', label: t('focus.moodFocused'), icon: 'sparkles', color: '#3B82F6' },
+    { mood: 'neutral', label: t('focus.moodNormal'), icon: 'checkmark-circle', color: '#10B981' },
+    { mood: 'tired', label: t('focus.moodTired'), icon: 'bed', color: '#8B5CF6' },
 ];
 
 export const SessionResultModal: React.FC<Props> = ({
@@ -51,6 +51,8 @@ export const SessionResultModal: React.FC<Props> = ({
     const [markTaskCompleted, setMarkTaskCompleted] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+
+    const moodOptions = getMoodOptions();
 
     useEffect(() => {
         if (visible) {
@@ -93,7 +95,7 @@ export const SessionResultModal: React.FC<Props> = ({
         if (isNaN(qIncorrect)) qIncorrect = 0;
 
         if (!skipDetails && (qCorrect + qIncorrect > qTotal) && qTotal > 0) {
-            setError('Correct + Incorrect count cannot exceed total questions solved.');
+            setError(t('focus.errQuestionsExceeded'));
             return;
         }
 
@@ -121,7 +123,7 @@ export const SessionResultModal: React.FC<Props> = ({
             await onSubmit(payload);
             onClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to save session');
+            setError(err instanceof Error ? err.message : t('focus.errFailedSave'));
             setSubmitting(false);
         }
     };
@@ -145,9 +147,9 @@ export const SessionResultModal: React.FC<Props> = ({
                                 <Ionicons name="sparkles" size={20} color="#F59E0B" />
                             </View>
                             <View>
-                                <Text style={styles.headerTitle}>Session Completed!</Text>
+                                <Text style={styles.headerTitle}>{t('focus.modalTitle')}</Text>
                                 <Text style={styles.headerSubtitle}>
-                                    {durationMinutes} min focus session logged
+                                    {durationMinutes} {t('focus.min')} {t('focus.modalSubtitle')}
                                 </Text>
                             </View>
                         </View>
@@ -173,7 +175,7 @@ export const SessionResultModal: React.FC<Props> = ({
                                 <View style={styles.taskCardHeader}>
                                     <View style={styles.taskCardCourseBadge}>
                                         <Text style={styles.taskCardCourseText}>
-                                            {task.courseName || 'Task'}
+                                            {task.courseName || t('focus.activeTask')}
                                         </Text>
                                     </View>
                                     <Text style={styles.taskCardTitle} numberOfLines={1}>
@@ -192,7 +194,7 @@ export const SessionResultModal: React.FC<Props> = ({
                                         color={markTaskCompleted ? '#10B981' : '#94A3B8'}
                                     />
                                     <Text style={styles.markCompleteToggleText}>
-                                        Mark this task as completed
+                                        {t('focus.markComplete')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -200,9 +202,9 @@ export const SessionResultModal: React.FC<Props> = ({
 
                         {/* Mood / Session Quality */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.sectionLabel}>How was your focus?</Text>
+                            <Text style={styles.sectionLabel}>{t('focus.howWasFocus')}</Text>
                             <View style={styles.moodRow}>
-                                {MOOD_OPTIONS.map((item) => (
+                                {moodOptions.map((item) => (
                                     <TouchableOpacity
                                         key={item.mood}
                                         style={[
@@ -228,10 +230,10 @@ export const SessionResultModal: React.FC<Props> = ({
 
                         {/* Questions Solved & Accuracy */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.sectionLabel}>Questions & Targets (Optional)</Text>
+                            <Text style={styles.sectionLabel}>{t('focus.questionsTargets')}</Text>
                             <View style={styles.statsInputsRow}>
                                 <View style={styles.statInputWrap}>
-                                    <Text style={styles.inputSubLabel}>Total Solved</Text>
+                                    <Text style={styles.inputSubLabel}>{t('focus.totalSolved')}</Text>
                                     <TextInput
                                         style={styles.numberInput}
                                         placeholder="0"
@@ -244,7 +246,7 @@ export const SessionResultModal: React.FC<Props> = ({
 
                                 <View style={styles.statInputWrap}>
                                     <Text style={[styles.inputSubLabel, { color: '#059669' }]}>
-                                        Correct
+                                        {t('focus.correct')}
                                     </Text>
                                     <TextInput
                                         style={[styles.numberInput, styles.numberInputGreen]}
@@ -258,7 +260,7 @@ export const SessionResultModal: React.FC<Props> = ({
 
                                 <View style={styles.statInputWrap}>
                                     <Text style={[styles.inputSubLabel, { color: '#DC2626' }]}>
-                                        Incorrect
+                                        {t('focus.incorrect')}
                                     </Text>
                                     <TextInput
                                         style={[styles.numberInput, styles.numberInputRed]}
@@ -274,10 +276,10 @@ export const SessionResultModal: React.FC<Props> = ({
 
                         {/* Notes / Takeaways */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.sectionLabel}>Study Notes / Reflection</Text>
+                            <Text style={styles.sectionLabel}>{t('focus.notesLabel')}</Text>
                             <TextInput
                                 style={styles.textArea}
-                                placeholder="What did you learn? Any questions to review later?"
+                                placeholder={t('focus.notesPlaceholder')}
                                 placeholderTextColor="#94A3B8"
                                 multiline
                                 numberOfLines={3}
@@ -288,7 +290,7 @@ export const SessionResultModal: React.FC<Props> = ({
 
                         {/* Photo Proof / Notes Attachment */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.sectionLabel}>Photo Proof / Notes (Optional)</Text>
+                            <Text style={styles.sectionLabel}>{t('focus.photoLabel')}</Text>
                             {proofPhotoUri ? (
                                 <View style={styles.photoPreviewContainer}>
                                     <Image source={{ uri: proofPhotoUri }} style={styles.photoPreview} />
@@ -306,7 +308,7 @@ export const SessionResultModal: React.FC<Props> = ({
                                     activeOpacity={0.8}
                                 >
                                     <Ionicons name="camera-outline" size={20} color="#2563EB" />
-                                    <Text style={styles.addPhotoBtnText}>Attach Notes Photo</Text>
+                                    <Text style={styles.addPhotoBtnText}>{t('focus.attachPhoto')}</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -319,7 +321,7 @@ export const SessionResultModal: React.FC<Props> = ({
                             onPress={() => handleSubmit(true)}
                             disabled={submitting}
                         >
-                            <Text style={styles.skipBtnText}>Skip Details</Text>
+                            <Text style={styles.skipBtnText}>{t('focus.skipDetails')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -328,7 +330,7 @@ export const SessionResultModal: React.FC<Props> = ({
                             disabled={submitting}
                         >
                             <Text style={styles.saveBtnText}>
-                                {submitting ? 'Saving...' : 'Save Summary'}
+                                {submitting ? t('focus.saving') : t('focus.saveSummary')}
                             </Text>
                         </TouchableOpacity>
                     </View>

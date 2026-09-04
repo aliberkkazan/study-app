@@ -18,3 +18,7 @@ export { MentorRequestsScreen } from './Mentor/MentorRequestsScreen';
 export { default as TodayScreen } from './Core/TodayScreen';
 export { default as FocusScreen } from './Core/FocusScreen';
 export { default as ProgressScreen } from './Core/ProgressScreen';
+
+// Roadmap & Exam Selection
+export { ExamSelectionScreen } from './Roadmap/ExamSelectionScreen';
+export { RoadmapScreen } from './Roadmap/RoadmapScreen';

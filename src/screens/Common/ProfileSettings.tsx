@@ -5,6 +5,7 @@ import { useTheme } from '@/theme';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import { deleteAccount } from '@/redux/authSlice';
+import { t } from '../../utils/i18n';
 
 const ProfileSettings = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -12,12 +13,12 @@ const ProfileSettings = () => {
 
     const handleDeleteAccount = () => {
         Alert.alert(
-            'Confirm Deletion',
-            'Are you sure you want to delete your account? This action cannot be undone.',
+            t('profile.confirmDeletion'),
+            t('profile.confirmDeletionMsg'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Delete',
+                    text: t('profile.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -44,7 +45,7 @@ const ProfileSettings = () => {
         <Block padding={20}>
             <List.Item
                 onPress={() => { handleDeleteAccount(); }}
-                title="Delete my Account"
+                title={t('profile.deleteAccount')}
                 titleStyle={styles.menuItemText}
                 left={props => (
                     <List.ListIcon
