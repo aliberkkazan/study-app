@@ -23,6 +23,7 @@ import {
     setSelectedCategory,
     setActiveFocusTask,
 } from '../../redux/tasksSlice';
+import { fetchStudyProfile } from '../../redux/roadmapSlice';
 import { Task, TaskCategory, CreateTaskPayload } from '../../api/types';
 import { TaskCard, TaskFilterTabs, TaskCreateModal } from '../../components/tasks';
 import { ViewState } from '../../components/common/ViewState';
@@ -46,6 +47,7 @@ const TodayScreen: React.FC = () => {
 
     const loadTasks = useCallback(() => {
         dispatch(fetchTasks());
+        dispatch(fetchStudyProfile());
     }, [dispatch]);
 
     useEffect(() => {
@@ -54,7 +56,10 @@ const TodayScreen: React.FC = () => {
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await dispatch(fetchTasks());
+        await Promise.all([
+            dispatch(fetchTasks()),
+            dispatch(fetchStudyProfile()),
+        ]);
         setRefreshing(false);
     };
 

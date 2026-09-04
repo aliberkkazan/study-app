@@ -24,20 +24,28 @@ import {
   setSelectedCountry,
   setSelectedExam,
 } from '../../redux/roadmapSlice';
+import { updateStudyProfile } from '../../api/services/studyProfile';
 import { YKS_TRACKS } from '../../data/examPacks';
 
 export const ExamSelectionScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
 
-  const { selectedCountry } = useSelector((state: RootState) => state.roadmap);
+  const {
+    selectedCountry,
+    selectedExam,
+    targetTrack: currentTrack,
+    targetScore: currentTargetScore,
+  } = useSelector((state: RootState) => state.roadmap);
   const [countryPickerVisible, setCountryPickerVisible] = useState(false);
 
-  // Setup form states
-  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
-  const [selectedTrack, setSelectedTrack] = useState<string>('sayisal');
-  const [targetScore, setTargetScore] = useState<string>('İlk 20.000');
-  const [satTargetScore, setSatTargetScore] = useState<string>('1450');
+  // Setup form states preloaded from current redux state
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(
+    selectedExam && selectedExam !== 'none' ? selectedExam : null
+  );
+  const [selectedTrack, setSelectedTrack] = useState<string>(currentTrack || 'sayisal');
+  const [targetScore, setTargetScore] = useState<string>(currentTargetScore || 'İlk 20.000');
+  const [satTargetScore, setSatTargetScore] = useState<string>(currentTargetScore || '1450');
 
   const currentCountryInfo =
     SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountry) || SUPPORTED_COUNTRIES[0];
@@ -50,10 +58,15 @@ export const ExamSelectionScreen: React.FC = () => {
     setCountryPickerVisible(false);
   };
 
-  const handleSelectExam = (exam: ExamOption) => {
+  const handleSelectExam = async (exam: ExamOption) => {
     if (exam.isFreeStudy) {
       // General Study without curriculum
       dispatch(setSelectedExam({ exam: 'none' }));
+      try {
+        await updateStudyProfile({ track: 'GENERAL' });
+      } catch (err) {
+        // Ignore background sync error
+      }
       Alert.alert(
         'Serbest Çalışma Modu Aktif',
         'Herhangi bir sınava bağlı kalmadan görevlerini ekleyebilir ve odaklanabilirsin.',
@@ -65,7 +78,7 @@ export const ExamSelectionScreen: React.FC = () => {
     setSelectedExamId(exam.id);
   };
 
-  const handleConfirmYKS = () => {
+  const handleConfirmYKS = async () => {
     dispatch(
       setSelectedExam({
         exam: 'yks',
@@ -74,6 +87,23 @@ export const ExamSelectionScreen: React.FC = () => {
         targetDate: '2027-06-20',
       })
     );
+    try {
+      const rankNum = targetScore.includes('İlk')
+        ? parseInt(targetScore.replace(/\D/g, ''), 10) || 10000
+        : undefined;
+      const scoreNum = !targetScore.includes('İlk')
+        ? parseInt(targetScore.replace(/\D/g, ''), 10) || undefined
+        : undefined;
+
+      await updateStudyProfile({
+        track: selectedTrack.toUpperCase() as any,
+        targetExamDate: '2027-06-20',
+        targetRank: rankNum,
+        targetScore: scoreNum,
+      });
+    } catch (err) {
+      // Ignore background sync error
+    }
     Alert.alert(
       'YKS Yol Haritanız Hazır!',
       `${selectedTrack.toUpperCase()} alanına uygun haftalık roadmap ve konu dağılımınız oluşturuldu.`,
@@ -88,7 +118,7 @@ export const ExamSelectionScreen: React.FC = () => {
     );
   };
 
-  const handleConfirmSAT = () => {
+  const handleConfirmSAT = async () => {
     dispatch(
       setSelectedExam({
         exam: 'sat',
@@ -96,6 +126,15 @@ export const ExamSelectionScreen: React.FC = () => {
         targetDate: '2027-05-08',
       })
     );
+    try {
+      await updateStudyProfile({
+        track: 'SAT_ALL',
+        targetExamDate: '2027-05-08',
+        targetScore: parseInt(satTargetScore, 10) || 1450,
+      });
+    } catch (err) {
+      // Ignore background sync error
+    }
     Alert.alert(
       'Digital SAT Roadmap Ready!',
       `Target score of ${satTargetScore} configured with module practice tasks.`,

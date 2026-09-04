@@ -15,6 +15,8 @@ import { RootState, AppDispatch } from '../../redux/store';
 import {
   toggleRoadmapTaskCompletion,
   dismissRescheduledReason,
+  ensureRoadmapTasks,
+  resetRoadmapTasks,
 } from '../../redux/roadmapSlice';
 import { addNewTask, setActiveFocusTask } from '../../redux/tasksSlice';
 import { TrialExamModal } from '../../components/roadmap/TrialExamModal';
@@ -36,6 +38,16 @@ export const RoadmapScreen: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'tasks' | 'trials'>('tasks');
   const [trialModalVisible, setTrialModalVisible] = useState(false);
+
+  React.useEffect(() => {
+    if (
+      selectedExam &&
+      selectedExam !== 'none' &&
+      (!suggestedTasks || suggestedTasks.length === 0)
+    ) {
+      dispatch(ensureRoadmapTasks());
+    }
+  }, [selectedExam, suggestedTasks?.length, dispatch]);
 
   const examTitle =
     selectedExam === 'yks'
@@ -158,7 +170,7 @@ export const RoadmapScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeTab === 'tasks' ? (
           <>
-            {suggestedTasks.length === 0 ? (
+            {selectedExam === 'none' || !selectedExam ? (
               <View style={styles.emptyState}>
                 <Ionicons name="sparkles-outline" size={48} color="#adb5bd" />
                 <Text style={styles.emptyTitle}>Henüz bir sınav seçilmedi</Text>
@@ -170,6 +182,20 @@ export const RoadmapScreen: React.FC = () => {
                   onPress={() => navigation.navigate('ExamSelection')}
                 >
                   <Text style={styles.emptyActionText}>Sınav Seç</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (!suggestedTasks || suggestedTasks.length === 0) ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="checkmark-done-circle-outline" size={48} color="#2b8a3e" />
+                <Text style={styles.emptyTitle}>Önerilen Görev Bulunmuyor</Text>
+                <Text style={styles.emptySubtitle}>
+                  Bu haftaya ait tüm görevleri tamamlamış olabilirsin veya görev listesi henüz oluşturulmadı.
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyActionBtn}
+                  onPress={() => dispatch(resetRoadmapTasks())}
+                >
+                  <Text style={styles.emptyActionText}>Görevleri Yenile</Text>
                 </TouchableOpacity>
               </View>
             ) : (

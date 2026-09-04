@@ -369,6 +369,26 @@ export const roadmapSlice = createSlice({
     clearLastGeneratedCode: (state) => {
       state.lastGeneratedInviteCode = null;
     },
+    ensureRoadmapTasks: (state) => {
+      if (
+        state.selectedExam &&
+        state.selectedExam !== 'none' &&
+        (!state.suggestedTasks || state.suggestedTasks.length === 0)
+      ) {
+        state.suggestedTasks = generateInitialRoadmapTasks(
+          state.selectedExam,
+          state.targetTrack
+        );
+      }
+    },
+    resetRoadmapTasks: (state) => {
+      if (state.selectedExam && state.selectedExam !== 'none') {
+        state.suggestedTasks = generateInitialRoadmapTasks(
+          state.selectedExam,
+          state.targetTrack
+        );
+      }
+    },
   },
   extraReducers: (builder) => {
     // fetchPartners
@@ -486,6 +506,18 @@ export const roadmapSlice = createSlice({
         if (profile.targetExamDate) {
           state.targetDate = profile.targetExamDate;
         }
+
+        // Auto-generate roadmap tasks if exam is selected and task list is empty
+        if (
+          state.selectedExam &&
+          state.selectedExam !== 'none' &&
+          (!state.suggestedTasks || state.suggestedTasks.length === 0)
+        ) {
+          state.suggestedTasks = generateInitialRoadmapTasks(
+            state.selectedExam,
+            state.targetTrack
+          );
+        }
       }
     });
 
@@ -512,6 +544,8 @@ export const {
   updateShareSettings,
   dismissRescheduledReason,
   clearLastGeneratedCode,
+  ensureRoadmapTasks,
+  resetRoadmapTasks,
 } = roadmapSlice.actions;
 
 export default roadmapSlice.reducer;
