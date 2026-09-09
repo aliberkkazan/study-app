@@ -17,26 +17,28 @@ import { useNavigation } from '@react-navigation/native';
 import { Button } from '@/components';
 import client from '../../api/client';
 import { lightTheme } from '../../theme/theme';
+import { useAppLanguage } from '../../utils/i18n';
 
 const { width, height } = Dimensions.get('window');
 
 const RegisterScreen = () => {
-    const navigation = useNavigation();
+    const { t } = useAppLanguage();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const navigation = useNavigation();
     const role = 'student'; // Default role for onboarding
 
     const handleRegister = async () => {
         if (!name.trim() || !email.trim() || !password.trim()) {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert(t('common.error'), t('auth.fillAllFields'));
             return;
         }
 
         if (password.length < 6) {
-            Alert.alert('Error', 'Password must be at least 6 characters long');
+            Alert.alert(t('common.error'), t('auth.passwordLength'));
             return;
         }
 
@@ -50,18 +52,18 @@ const RegisterScreen = () => {
             });
 
             Alert.alert(
-                'Success',
-                'Registration successful! Please login.',
+                t('auth.registrationSuccess'),
+                t('auth.registrationSuccessMsg'),
                 [
                     {
-                        text: 'OK',
+                        text: t('common.ok'),
                         onPress: () => navigation.navigate('Login' as never),
                     },
                 ]
             );
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Registration failed';
-            Alert.alert('Error', message);
+            const message = error.response?.data?.message || t('auth.registrationFailed');
+            Alert.alert(t('common.error'), message);
         } finally {
             setLoading(false);
         }
@@ -86,8 +88,8 @@ const RegisterScreen = () => {
                         <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
 
-                    <Text style={styles.title}>Create Account</Text>
-                    <Text style={styles.subtitle}>Sign up to get started</Text>
+                    <Text style={styles.title}>{t('auth.createAccount')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.signUpToGetStarted')}</Text>
 
                     <View style={styles.inputContainer}>
                         {/* Role selection has been removed to make solo-student the default onboarding flow */}
@@ -95,7 +97,7 @@ const RegisterScreen = () => {
                         <View style={styles.inputWrapper}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Full Name"
+                                placeholder={t('auth.fullName')}
                                 placeholderTextColor="rgba(255,255,255,0.7)"
                                 value={name}
                                 onChangeText={setName}
@@ -106,7 +108,7 @@ const RegisterScreen = () => {
                         <View style={styles.inputWrapper}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Email"
+                                placeholder={t('auth.email')}
                                 placeholderTextColor="rgba(255,255,255,0.7)"
                                 value={email}
                                 onChangeText={setEmail}
@@ -118,7 +120,7 @@ const RegisterScreen = () => {
                         <View style={[styles.inputWrapper, styles.passwordWrapper]}>
                             <TextInput
                                 style={styles.passwordInput}
-                                placeholder="Password"
+                                placeholder={t('auth.password')}
                                 placeholderTextColor="rgba(255,255,255,0.7)"
                                 secureTextEntry={!showPassword}
                                 value={password}
@@ -146,13 +148,13 @@ const RegisterScreen = () => {
                         style={styles.button}
                         labelStyle={styles.buttonLabel}
                     >
-                        Register
+                        {t('auth.register')}
                     </Button>
 
                     <View style={styles.loginContainer}>
-                        <Text style={styles.loginText}>Already have an account? </Text>
+                        <Text style={styles.loginText}>{t('auth.haveAccount')}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Login' as never)}>
-                            <Text style={styles.loginLink}>Login</Text>
+                            <Text style={styles.loginLink}>{t('auth.login')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

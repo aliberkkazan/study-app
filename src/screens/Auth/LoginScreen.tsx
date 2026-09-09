@@ -24,10 +24,12 @@ import {
     loadRememberedEmail,
     clearRememberedEmail,
 } from '../../utils/authStorage';
+import { useAppLanguage } from '../../utils/i18n';
 
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
+    const { t } = useAppLanguage();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
@@ -75,14 +77,14 @@ const LoginScreen = () => {
                 style={styles.keyboardView}
             >
                 <View style={styles.card}>
-                    <Text style={styles.title}>Welcome Back</Text>
-                    <Text style={styles.subtitle}>Sign in to continue</Text>
+                    <Text style={styles.title}>{t('auth.welcomeBack')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.signInToContinue')}</Text>
 
                     <View style={styles.inputContainer}>
                         <View style={styles.inputWrapper}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Email"
+                                placeholder={t('auth.email')}
                                 placeholderTextColor="rgba(255,255,255,0.7)"
                                 value={email}
                                 onChangeText={setEmail}
@@ -93,7 +95,7 @@ const LoginScreen = () => {
                         <View style={[styles.inputWrapper, styles.passwordWrapper]}>
                             <TextInput
                                 style={styles.passwordInput}
-                                placeholder="Password"
+                                placeholder={t('auth.password')}
                                 placeholderTextColor="rgba(255,255,255,0.7)"
                                 secureTextEntry={!showPassword}
                                 value={password}
@@ -121,7 +123,7 @@ const LoginScreen = () => {
                                 size={24}
                                 color="#fff"
                             />
-                            <Text style={styles.rememberText}>Remember Me</Text>
+                            <Text style={styles.rememberText}>{t('auth.rememberMe')}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -136,13 +138,13 @@ const LoginScreen = () => {
                         style={styles.button}
                         labelStyle={styles.buttonLabel}
                     >
-                        Login
+                        {t('auth.login')}
                     </Button>
 
                     <View style={styles.registerContainer}>
-                        <Text style={styles.registerText}>Don't have an account? </Text>
+                        <Text style={styles.registerText}>{t('auth.noAccount')}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Register' as never)}>
-                            <Text style={styles.registerLink}>Register</Text>
+                            <Text style={styles.registerLink}>{t('auth.register')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

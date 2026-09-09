@@ -5,9 +5,10 @@ import { useTheme } from '@/theme';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import { deleteAccount } from '@/redux/authSlice';
-import { t } from '../../utils/i18n';
+import { useAppLanguage } from '../../utils/i18n';
 
 const ProfileSettings = () => {
+    const { t } = useAppLanguage();
     const dispatch = useDispatch<AppDispatch>();
     const { colors } = useTheme();
 

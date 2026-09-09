@@ -11,6 +11,7 @@ interface Props {
     onStartFocus: (task: Task) => void;
     onArchive: (task: Task) => void;
     onUnarchive?: (task: Task) => void;
+    onUploadImage?: (task: Task) => void;
 }
 
 export const TaskCard: React.FC<Props> = ({
@@ -19,9 +20,11 @@ export const TaskCard: React.FC<Props> = ({
     onStartFocus,
     onArchive,
     onUnarchive,
+    onUploadImage,
 }) => {
     const isCompleted = task.completed || task.status === 'completed';
     const isArchived = task.status === 'archived';
+    const isMentorAssigned = !!task.assignerId;
 
     return (
         <View style={[styles.card, isCompleted && styles.cardCompleted]}>
@@ -120,17 +123,31 @@ export const TaskCard: React.FC<Props> = ({
                 </View>
             </View>
 
-            {/* Bottom Action: Start Focus Session */}
-            {!isArchived && !isCompleted && (
+            {/* Bottom Actions */}
+            {!isArchived && (
                 <View style={styles.cardFooter}>
-                    <TouchableOpacity
-                        style={styles.focusButton}
-                        onPress={() => onStartFocus(task)}
-                        activeOpacity={0.8}
-                    >
-                        <Ionicons name="play-circle" size={18} color="#FFFFFF" />
-                        <Text style={styles.focusButtonText}>{t('task.startFocus')}</Text>
-                    </TouchableOpacity>
+                    {!isCompleted && (
+                        <TouchableOpacity
+                            style={styles.focusButton}
+                            onPress={() => onStartFocus(task)}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="play-circle" size={18} color="#FFFFFF" />
+                            <Text style={styles.focusButtonText}>{t('task.startFocus')}</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {/* ONLY Mentor-Assigned Tasks: Upload Solution Image */}
+                    {isMentorAssigned && onUploadImage && (
+                        <TouchableOpacity
+                            style={styles.uploadPhotoButton}
+                            onPress={() => onUploadImage(task)}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="camera" size={16} color="#4338CA" />
+                            <Text style={styles.uploadPhotoButtonText}>{t('task.uploadPhoto')}</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
         </View>
@@ -260,8 +277,12 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: '#F1F5F9',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
     focusButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -275,5 +296,22 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
         color: '#FFFFFF',
+    },
+    uploadPhotoButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#EEF2FF',
+        borderWidth: 1,
+        borderColor: '#C7D2FE',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        gap: 6,
+    },
+    uploadPhotoButtonText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#4338CA',
     },
 });

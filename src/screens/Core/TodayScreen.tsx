@@ -7,7 +7,9 @@ import {
     RefreshControl,
     TouchableOpacity,
     StatusBar,
+    Alert,
 } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -24,25 +26,33 @@ import {
     setActiveFocusTask,
 } from '../../redux/tasksSlice';
 import { fetchStudyProfile } from '../../redux/roadmapSlice';
-import { Task, TaskCategory, CreateTaskPayload } from '../../api/types';
-import { TaskCard, TaskFilterTabs, TaskCreateModal } from '../../components/tasks';
+import { addSubmission } from '../../redux/dataSlice';
+import { recordSession } from '../../redux/sessionsSlice';
+import { Task, TaskCategory, CreateTaskPayload, TaskStatus } from '../../api/types';
+import { TaskCard, TaskFilterTabs, TaskCreateModal, TaskCompletionModal } from '../../components/tasks';
 import { ViewState } from '../../components/common/ViewState';
 import { OfflineWarning } from '../../components/common/OfflineWarning';
-import { t } from '../../utils/i18n';
+import { useAppLanguage } from '../../utils/i18n';
 import { getLocalDateString, normalizeDateString } from '../../utils/date';
 
 const TodayScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<any>();
+    const { language, t } = useAppLanguage();
 
-    const { items, selectedCategory, loading, error } = useSelector(
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { items, selectedCategory, loading: tasksLoading, error } = useSelector(
         (state: RootState) => state.tasks
     );
     const { selectedExam, targetTrack, targetScore } = useSelector(
         (state: RootState) => state.roadmap
     );
 
+    const loading = tasksLoading;
+
     const [modalVisible, setModalVisible] = useState(false);
+    const [completionModalVisible, setCompletionModalVisible] = useState(false);
+    const [completingTask, setCompletingTask] = useState<Task | null>(null);
     const [refreshing, setRefreshing] = useState(false);
 
     const loadTasks = useCallback(() => {
@@ -66,13 +76,16 @@ const TodayScreen: React.FC = () => {
     // Calculate dates & categorization
     const todayStr = useMemo(() => getLocalDateString(), []);
 
+    // Standard tasks from unified task management
+    const allTasks = items;
+
     const categorizedTasks = useMemo(() => {
         const todayTasks: Task[] = [];
         const upcomingTasks: Task[] = [];
         const flexibleTasks: Task[] = [];
         const archivedTasks: Task[] = [];
 
-        items.forEach((task) => {
+        allTasks.forEach((task) => {
             if (task.status === 'archived') {
                 archivedTasks.push(task);
             } else if (task.isFlexible || (!task.dueDate && !task.isFlexible)) {
@@ -95,7 +108,7 @@ const TodayScreen: React.FC = () => {
             flexible: flexibleTasks,
             archived: archivedTasks,
         };
-    }, [items, todayStr]);
+    }, [allTasks, todayStr]);
 
     const currentList = categorizedTasks[selectedCategory];
 
@@ -117,12 +130,103 @@ const TodayScreen: React.FC = () => {
 
     // Handlers
     const handleToggle = (task: Task) => {
+        if (task.completed || task.status === 'completed') {
+            dispatch(
+                toggleTask({
+                    taskId: task.id,
+                    completed: false,
+                })
+            );
+            return;
+        }
+
+        // When completing an uncompleted task, open quick log modal
+        setCompletingTask(task);
+        setCompletionModalVisible(true);
+    };
+
+    const handleDirectComplete = (task: Task) => {
         dispatch(
             toggleTask({
                 taskId: task.id,
-                completed: !task.completed,
+                completed: true,
             })
         );
+    };
+
+    const handleSubmitSessionForTask = async (
+        task: Task,
+        sessionData: {
+            durationMinutes: number;
+            questionsSolved?: number;
+            correctCount?: number;
+            incorrectCount?: number;
+            notes?: string;
+        }
+    ) => {
+        const now = new Date();
+        const startTime = new Date(
+            now.getTime() - sessionData.durationMinutes * 60000
+        ).toISOString();
+
+        await dispatch(
+            recordSession({
+                taskId: task.id,
+                taskTitle: task.title,
+                courseName: task.courseName,
+                topicName: task.topicName,
+                durationMinutes: sessionData.durationMinutes,
+                startedAt: startTime,
+                endedAt: now.toISOString(),
+                questionsSolved: sessionData.questionsSolved,
+                correctCount: sessionData.correctCount,
+                incorrectCount: sessionData.incorrectCount,
+                notes: sessionData.notes,
+                markTaskCompleted: true,
+            })
+        ).unwrap();
+    };
+
+    const handleUploadTaskImage = async (task: Task) => {
+        const studentId = user?.id;
+        if (!studentId) {
+            Alert.alert(t('common.error'), t('task.sessionNotFound'));
+            return;
+        }
+
+        const result = await launchImageLibrary({
+            mediaType: 'photo',
+            includeBase64: true,
+            quality: 0.6,
+        });
+
+        if (result.didCancel || !result.assets || result.assets.length === 0) {
+            return;
+        }
+
+        const asset = result.assets[0];
+        if (!asset.base64 || !asset.type) {
+            Alert.alert(t('common.error'), t('task.imageProcessError'));
+            return;
+        }
+
+        const base64Image = `data:${asset.type};base64,${asset.base64}`;
+
+        try {
+            await dispatch(
+                addSubmission({
+                    studentId,
+                    imageUrl: base64Image,
+                })
+            ).unwrap();
+
+            Alert.alert(
+                t('task.solutionUploaded'),
+                t('task.solutionSentMentor', { title: task.title })
+            );
+        } catch (error: any) {
+            Alert.alert(t('common.error'), error?.message || error || t('task.imageProcessError'));
+        }
     };
 
     const handleStartFocus = (task: Task) => {
@@ -149,8 +253,8 @@ const TodayScreen: React.FC = () => {
             month: 'short',
             day: 'numeric',
         };
-        return new Date().toLocaleDateString('en-US', options);
-    }, []);
+        return new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', options);
+    }, [language]);
 
     const renderHeader = () => (
         <View style={styles.headerContainer}>
@@ -170,46 +274,7 @@ const TodayScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Roadmap / Goal Banner */}
-            {selectedExam && selectedExam !== 'none' ? (
-                <TouchableOpacity
-                    style={styles.roadmapActiveBanner}
-                    onPress={() => navigation.navigate('Roadmap')}
-                    activeOpacity={0.85}
-                >
-                    <View style={styles.roadmapBannerLeft}>
-                        <View style={styles.roadmapCompassCircle}>
-                            <Ionicons name="compass" size={20} color="#2563EB" />
-                        </View>
-                        <View>
-                            <Text style={styles.roadmapBannerTitle}>
-                                {selectedExam === 'yks'
-                                    ? `YKS (${targetTrack?.toUpperCase() || 'SAYISAL'})`
-                                    : 'Digital SAT'}
-                            </Text>
-                            <Text style={styles.roadmapBannerSubtitle}>
-                                {targetScore ? `Hedef: ${targetScore}` : 'Haftalık programı gör'}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.roadmapGoBtn}>
-                        <Text style={styles.roadmapGoText}>{t('roadmap.viewRoadmap')}</Text>
-                        <Ionicons name="arrow-forward" size={14} color="#2563EB" />
-                    </View>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    style={styles.roadmapSetupPrompt}
-                    onPress={() => navigation.navigate('ExamSelection')}
-                    activeOpacity={0.85}
-                >
-                    <View style={styles.roadmapSetupPromptLeft}>
-                        <Ionicons name="school-outline" size={18} color="#475569" />
-                        <Text style={styles.roadmapSetupText}>{t('roadmap.bannerPrompt')}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-                </TouchableOpacity>
-            )}
+            {/* Roadmap / Goal Banner (Temporarily hidden as requested) */}
 
             {/* Daily Overview Card */}
             <View style={styles.overviewCard}>
@@ -277,6 +342,7 @@ const TodayScreen: React.FC = () => {
                             onStartFocus={handleStartFocus}
                             onArchive={handleArchive}
                             onUnarchive={handleUnarchive}
+                            onUploadImage={handleUploadTaskImage}
                         />
                     )}
                     ListEmptyComponent={
@@ -314,6 +380,18 @@ const TodayScreen: React.FC = () => {
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 onSubmit={handleCreateTask}
+            />
+
+            {/* Quick Task Completion & Progress Log Modal */}
+            <TaskCompletionModal
+                visible={completionModalVisible}
+                task={completingTask}
+                onClose={() => {
+                    setCompletionModalVisible(false);
+                    setCompletingTask(null);
+                }}
+                onDirectComplete={handleDirectComplete}
+                onSubmitWithSession={handleSubmitSessionForTask}
             />
         </View>
     );

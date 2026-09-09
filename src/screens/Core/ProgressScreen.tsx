@@ -17,10 +17,11 @@ import { fetchTasks } from '../../redux/tasksSlice';
 import { ViewState } from '../../components/common/ViewState';
 import { OfflineWarning } from '../../components/common/OfflineWarning';
 import { formatDisplayDate } from '../../utils/date';
-import { t, getLanguage, translateCourseName } from '../../utils/i18n';
+import { useAppLanguage, translateCourseName, translateSessionTitle } from '../../utils/i18n';
 
 const ProgressScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
+    const { language, t } = useAppLanguage();
     const { items: sessions, stats, loading, error } = useSelector(
         (state: RootState) => state.sessions
     );
@@ -54,9 +55,8 @@ const ProgressScreen: React.FC = () => {
 
     // Format minutes to "Xh Ym" / "Xsa Ydk" or "Xm" / "Xdk"
     const formatDuration = (mins: number) => {
-        const lang = getLanguage();
-        const mUnit = lang === 'tr' ? 'dk' : 'm';
-        const hUnit = lang === 'tr' ? 'sa' : 'h';
+        const mUnit = language === 'tr' ? 'dk' : 'm';
+        const hUnit = language === 'tr' ? 'sa' : 'h';
         if (!mins || mins === 0) return `0${mUnit}`;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
@@ -214,7 +214,7 @@ const ProgressScreen: React.FC = () => {
                                                     { backgroundColor: sub.color },
                                                 ]}
                                             />
-                                            <Text style={styles.legendName}>{translateCourseName(sub.courseName)}</Text>
+                                            <Text style={styles.legendName}>{translateCourseName(sub.courseName, language)}</Text>
                                         </View>
                                         <View style={styles.legendRight}>
                                             <Text style={styles.legendDuration}>
@@ -254,7 +254,7 @@ const ProgressScreen: React.FC = () => {
                                         <View style={styles.sessionCardMetaLeft}>
                                             <View style={styles.courseBadge}>
                                                 <Text style={styles.courseBadgeText}>
-                                                    {translateCourseName(session.courseName)}
+                                                    {translateCourseName(session.courseName, language)}
                                                 </Text>
                                             </View>
                                             {session.topicName ? (
@@ -265,13 +265,15 @@ const ProgressScreen: React.FC = () => {
                                         <View style={styles.durationPill}>
                                             <Ionicons name="timer-outline" size={12} color="#2563EB" />
                                             <Text style={styles.durationPillText}>
-                                                {session.durationMinutes}{getLanguage() === 'tr' ? 'dk' : 'm'}
+                                                {session.durationMinutes}{language === 'tr' ? 'dk' : 'm'}
                                             </Text>
                                         </View>
                                     </View>
 
                                     {session.taskTitle ? (
-                                        <Text style={styles.sessionTaskTitle}>{session.taskTitle}</Text>
+                                        <Text style={styles.sessionTaskTitle}>
+                                            {translateSessionTitle(session.taskTitle, language)}
+                                        </Text>
                                     ) : null}
 
                                     {/* Reflection notes if present */}

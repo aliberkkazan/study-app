@@ -18,14 +18,20 @@ import {
   logout,
   fetchCurrentUser,
   refreshMentorCode,
+  switchUserRole,
 } from '../../redux/authSlice';
 import {
   fetchStudyProfile,
   fetchStudyProgress,
+  setAppLanguage,
 } from '../../redux/roadmapSlice';
+import { fetchStudents, fetchConnectionRequests } from '../../redux/dataSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { t } from '../../utils/i18n';
+import {
+  saveLanguagePreference,
+} from '../../utils/userPreferences';
+import { useAppLanguage } from '../../utils/i18n';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -33,7 +39,9 @@ const ProfileScreen = () => {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useSelector(
     (state: RootState) => state.auth
   );
-  const { loading: dataLoading } = useSelector((state: RootState) => state.data);
+  const { loading: dataLoading, students, connectionRequests } = useSelector(
+    (state: RootState) => state.data
+  );
   const {
     selectedExam,
     targetTrack,
@@ -41,11 +49,14 @@ const ProfileScreen = () => {
     streakDays,
     weeklyAvailabilityHours,
   } = useSelector((state: RootState) => state.roadmap);
+  const { language, t } = useAppLanguage();
 
   const route = useRoute();
   const studentParam = (route.params as any)?.student;
   const isViewingStudent = !!studentParam;
   const displayedUser = isViewingStudent ? studentParam : currentUser;
+
+  const roleSwitchUsed = !!currentUser?.hasSwitchedRole;
 
   const loading = authLoading || dataLoading;
 
@@ -54,17 +65,57 @@ const ProfileScreen = () => {
       dispatch(fetchCurrentUser());
       dispatch(fetchStudyProfile());
       dispatch(fetchStudyProgress());
+      dispatch(fetchStudents());
+      dispatch(fetchConnectionRequests());
     }
   }, [dispatch, isViewingStudent, isAuthenticated]);
 
+  const handleSwitchRole = () => {
+    if (!currentUser?.id) return;
+    const targetRole = currentUser.role === 'mentor' ? 'student' : 'mentor';
+    const targetRoleName = targetRole === 'mentor' ? t('profile.roleMentor') : t('profile.roleStudent');
+
+    Alert.alert(
+      t('profile.switchRoleTitle'),
+      t('profile.switchRoleConfirm', { role: targetRoleName }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.change'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(switchUserRole()).unwrap();
+              Alert.alert(
+                t('common.success'),
+                t('profile.roleSwitchedSuccess', { role: targetRoleName }),
+                [
+                  {
+                    text: t('common.ok'),
+                    onPress: () => {
+                      dispatch(logout());
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
+            } catch (err: any) {
+              Alert.alert(t('common.error'), err || t('profile.roleSwitchFailed'));
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert(
-      'Çıkış Yap',
-      'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      t('profile.logoutTitle'),
+      t('profile.logoutConfirm'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Çıkış Yap',
+          text: t('profile.logoutTitle'),
           style: 'destructive',
           onPress: () => dispatch(logout()),
         },
@@ -72,14 +123,45 @@ const ProfileScreen = () => {
     );
   };
 
+  const handleLanguageChange = () => {
+    Alert.alert(
+      t('profile.appLanguage'),
+      t('profile.selectLang'),
+      [
+        {
+          text: `Türkçe 🇹🇷 ${language === 'tr' ? '✓' : ''}`,
+          onPress: async () => {
+            if (language !== 'tr') {
+              dispatch(setAppLanguage('tr'));
+              await saveLanguagePreference('tr');
+            }
+          },
+        },
+        {
+          text: `English 🇬🇧 ${language === 'en' ? '✓' : ''}`,
+          onPress: async () => {
+            if (language !== 'en') {
+              dispatch(setAppLanguage('en'));
+              await saveLanguagePreference('en');
+            }
+          },
+        },
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
   const handleRefreshCode = () => {
     Alert.alert(
-      'Mentor Kodunu Yenile',
-      'Mentor kodunuzu yenilemek istediğinize emin misiniz? Bu işlem her 12 saatte bir yapılabilir.',
+      t('profile.refreshMentorCode'),
+      t('profile.refreshCodeConfirm'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Yenile',
+          text: t('profile.refresh'),
           style: 'destructive',
           onPress: () => dispatch(refreshMentorCode()),
         },
@@ -90,7 +172,7 @@ const ProfileScreen = () => {
   const copyToClipboard = () => {
     if (displayedUser?.mentorCode) {
       Clipboard.setString(displayedUser.mentorCode);
-      Alert.alert('Kopyalandı! 📋', 'Mentor kodunuz panoya kopyalandı.');
+      Alert.alert(t('profile.copied'), t('profile.codeCopied'));
     }
   };
 
@@ -105,17 +187,17 @@ const ProfileScreen = () => {
 
   const examLabel =
     selectedExam === 'yks'
-      ? `YKS (${targetTrack ? targetTrack.toUpperCase() : 'Alan Seçilmedi'})`
+      ? `YKS (${targetTrack ? targetTrack.toUpperCase() : t('profile.noTrack')})`
       : selectedExam === 'sat'
-      ? `Digital SAT (${targetTrack ? targetTrack.toUpperCase() : 'Genel'})`
-      : 'Sınavsız / Serbest Çalışma';
+      ? `Digital SAT (${targetTrack ? targetTrack.toUpperCase() : t('profile.general')})`
+      : t('profile.freeStudy');
 
   const roleLabel =
     displayedUser?.role === 'mentor'
-      ? 'Mentor / Eğitmen'
+      ? t('profile.roleMentor')
       : displayedUser?.role === 'admin'
-      ? 'Yönetici'
-      : 'Öğrenci';
+      ? t('profile.roleAdmin')
+      : t('profile.roleStudent');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -138,7 +220,7 @@ const ProfileScreen = () => {
             </View>
           </View>
 
-          <Text style={styles.userName}>{displayedUser?.name || 'Kullanıcı'}</Text>
+          <Text style={styles.userName}>{displayedUser?.name || t('profile.user')}</Text>
           <Text style={styles.userEmail}>{displayedUser?.email || ''}</Text>
 
           <View style={styles.badgeRow}>
@@ -152,14 +234,10 @@ const ProfileScreen = () => {
               <Text style={styles.roleChipText}>{roleLabel}</Text>
             </View>
 
-            {selectedExam && selectedExam !== 'none' && (
-              <View style={styles.examChip}>
-                <Ionicons name="sparkles" size={13} color="#0369A1" style={{ marginRight: 4 }} />
-                <Text style={styles.examChipText}>
-                  {selectedExam === 'yks' ? 'YKS' : 'SAT'}
-                </Text>
-              </View>
-            )}
+            <View style={styles.examChip}>
+              <Ionicons name="sparkles" size={13} color="#0369A1" style={{ marginRight: 4 }} />
+              <Text style={styles.examChipText}>{examLabel}</Text>
+            </View>
           </View>
         </View>
 
@@ -169,16 +247,16 @@ const ProfileScreen = () => {
             <View style={[styles.statIconWrap, { backgroundColor: '#FFF7ED' }]}>
               <Ionicons name="flame" size={20} color="#EA580C" />
             </View>
-            <Text style={styles.statValue}>{streakDays} Gün</Text>
-            <Text style={styles.statLabel}>Çalışma Serisi</Text>
+            <Text style={styles.statValue}>{streakDays} {t('profile.days')}</Text>
+            <Text style={styles.statLabel}>{t('profile.studyStreak')}</Text>
           </View>
 
           <View style={styles.statCard}>
             <View style={[styles.statIconWrap, { backgroundColor: '#EFF6FF' }]}>
               <Ionicons name="time" size={20} color="#2563EB" />
             </View>
-            <Text style={styles.statValue}>{weeklyAvailabilityHours || 0} Saat</Text>
-            <Text style={styles.statLabel}>Haftalık Hedef</Text>
+            <Text style={styles.statValue}>{weeklyAvailabilityHours || 0} {t('profile.hours')}</Text>
+            <Text style={styles.statLabel}>{t('profile.weeklyTarget')}</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -186,61 +264,25 @@ const ProfileScreen = () => {
               <Ionicons name="trophy" size={20} color="#7C3AED" />
             </View>
             <Text style={styles.statValue} numberOfLines={1}>
-              {targetScore || (targetTrack ? targetTrack.toUpperCase() : 'Belirlenmedi')}
+              {t('profile.general')}
             </Text>
-            <Text style={styles.statLabel}>Hedef</Text>
+            <Text style={styles.statLabel}>{t('profile.target')}</Text>
           </View>
         </View>
 
-        {/* EXAM & ROADMAP CARD */}
-        {!isViewingStudent && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardHeaderIcon, { backgroundColor: '#E0F2FE' }]}>
-                <Ionicons name="compass" size={18} color="#0284C7" />
-              </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.cardSectionTitle}>HEDEF VE SINAV PLANI</Text>
-                <Text style={styles.cardMainText}>{examLabel}</Text>
-              </View>
-            </View>
-
-            <View style={styles.cardActionRow}>
-              {selectedExam && selectedExam !== 'none' && (
-                <TouchableOpacity
-                  style={styles.primaryActionButton}
-                  onPress={() => navigation.navigate('Roadmap')}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="map" size={16} color="#fff" style={{ marginRight: 6 }} />
-                  <Text style={styles.primaryActionButtonText}>Haftalık Yol Haritası</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#fff" style={{ marginLeft: 4 }} />
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                style={styles.secondaryActionButton}
-                onPress={() => navigation.navigate('ExamSelection')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="options-outline" size={16} color="#0F172A" style={{ marginRight: 6 }} />
-                <Text style={styles.secondaryActionButtonText}>Sınavı Değiştir</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* MENTOR CODE SECTION (FOR MENTORS) */}
-        {!isViewingStudent && displayedUser?.role === 'mentor' && (
+        {/* MENTORSHIP & MY STUDENTS (FOR MENTORS ONLY) */}
+        {!isViewingStudent && currentUser?.role === 'mentor' && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardHeaderIcon, { backgroundColor: '#FEF3C7' }]}>
                 <Ionicons name="key" size={18} color="#D97706" />
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.cardSectionTitle}>MENTOR BAĞLANTI KODUNUZ</Text>
+                <Text style={styles.cardSectionTitle}>
+                  {t('profile.mentorshipStudents')}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  Öğrencileriniz bu kodu kullanarak size bağlanabilir
+                  {t('profile.studentsCodeSub')}
                 </Text>
               </View>
             </View>
@@ -262,81 +304,207 @@ const ProfileScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.requestsButton}
-              onPress={() => navigation.navigate('MentorRequests' as never)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="people-outline" size={18} color="#007AFF" style={{ marginRight: 8 }} />
-              <Text style={styles.requestsButtonText}>Gelen Bağlantı İstekleri</Text>
-              <Ionicons name="chevron-forward" size={16} color="#007AFF" style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <TouchableOpacity
+                style={styles.primaryActionButton}
+                onPress={() => navigation.navigate('MentorStudents')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="people" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.primaryActionButtonText}>
+                  {t('profile.manageStudents')} ({students?.length || 0})
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.requestsButton}
+                onPress={() => navigation.navigate('MentorRequests')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="mail-unread-outline" size={18} color="#007AFF" style={{ marginRight: 8 }} />
+                <Text style={styles.requestsButtonText}>
+                  {t('profile.incomingRequests')}
+                </Text>
+                {connectionRequests?.filter((r) => r.status === 'pending').length > 0 && (
+                  <View style={styles.badgePill}>
+                    <Text style={styles.badgePillText}>
+                      {connectionRequests.filter((r) => r.status === 'pending').length}
+                    </Text>
+                  </View>
+                )}
+                <Ionicons name="chevron-forward" size={16} color="#007AFF" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
-        {/* CONNECTED MENTORS (FOR STUDENTS) */}
-        {displayedUser?.mentors && displayedUser.mentors.length > 0 && (
+        {/* CONNECTED MENTORS (FOR STUDENTS ONLY) */}
+        {!isViewingStudent && currentUser?.role === 'student' && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardHeaderIcon, { backgroundColor: '#EEF2FF' }]}>
                 <Ionicons name="school" size={18} color="#4338CA" />
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.cardSectionTitle}>BAĞLI MENTOR(LAR)</Text>
-                <Text style={styles.cardSubtitle}>Gelişiminizi takip eden mentorlarınız</Text>
+                <Text style={styles.cardSectionTitle}>
+                  {t('profile.connectedMentors')}
+                </Text>
+                <Text style={styles.cardSubtitle}>
+                  {t('profile.mentorsSub')}
+                </Text>
               </View>
             </View>
 
-            {displayedUser.mentors.map((m: any) => (
-              <View key={m.id} style={styles.mentorItemRow}>
-                <View style={styles.mentorItemAvatar}>
-                  <Text style={styles.mentorItemAvatarText}>
-                    {getInitials(m.name)}
+            {displayedUser?.mentors && displayedUser.mentors.length > 0 ? (
+              <>
+                {displayedUser.mentors.map((m: any) => (
+                  <View key={m.id} style={styles.mentorItemRow}>
+                    <View style={styles.mentorItemAvatar}>
+                      <Text style={styles.mentorItemAvatarText}>
+                        {getInitials(m.name)}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.mentorItemName}>{m.name}</Text>
+                      <Text style={styles.mentorItemEmail}>{m.email || 'Mentor'}</Text>
+                    </View>
+                    <View style={styles.mentorStatusPill}>
+                      <Text style={styles.mentorStatusText}>
+                        {t('profile.active')}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+
+                <TouchableOpacity
+                  style={[styles.secondaryActionButton, { marginTop: 10 }]}
+                  onPress={() => navigation.navigate('JoinMentor')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add-circle-outline" size={16} color="#0F172A" style={{ marginRight: 6 }} />
+                  <Text style={styles.secondaryActionButtonText}>
+                    {t('profile.addNewMentor')}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <View style={{ paddingTop: 6 }}>
+                <Text style={{ fontSize: 13, color: '#64748B', lineHeight: 18, marginBottom: 12 }}>
+                  {t('profile.connectMentorSub')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.primaryActionButton}
+                  onPress={() => navigation.navigate('JoinMentor')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="link-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.primaryActionButtonText}>
+                    {t('profile.connectWithCode')}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ACCOUNT ROLE & SWITCH */}
+        {!isViewingStudent && (
+          <View style={styles.compactRoleCard}>
+            <View style={styles.compactRoleTopRow}>
+              <View style={styles.compactRoleLeft}>
+                <View
+                  style={[
+                    styles.compactRoleIconWrap,
+                    {
+                      backgroundColor:
+                        currentUser?.role === 'mentor' ? '#F5F3FF' : '#EFF6FF',
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={currentUser?.role === 'mentor' ? 'school' : 'person'}
+                    size={16}
+                    color={currentUser?.role === 'mentor' ? '#7C3AED' : '#2563EB'}
+                  />
+                </View>
+                <View>
+                  <Text style={styles.compactRoleLabel}>
+                    {t('profile.accountRole')}
+                  </Text>
+                  <Text style={styles.compactRoleValue}>
+                    {roleLabel}
                   </Text>
                 </View>
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.mentorItemName}>{m.name}</Text>
-                  <Text style={styles.mentorItemEmail}>{m.email || 'Mentor'}</Text>
-                </View>
-                <View style={styles.mentorStatusPill}>
-                  <Text style={styles.mentorStatusText}>Aktif</Text>
-                </View>
               </View>
-            ))}
+
+              {!roleSwitchUsed ? (
+                <TouchableOpacity
+                  style={styles.compactSwitchBtn}
+                  onPress={handleSwitchRole}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="repeat-outline" size={14} color="#0F172A" style={{ marginRight: 4 }} />
+                  <Text style={styles.compactSwitchBtnText}>
+                    {currentUser?.role === 'mentor'
+                      ? t('profile.toStudent')
+                      : t('profile.toMentor')}
+                  </Text>
+                  <View style={styles.compactOneTimeBadge}>
+                    <Text style={styles.compactOneTimeBadgeText}>1x</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.compactLockedBadge}>
+                  <Ionicons name="lock-closed" size={12} color="#94A3B8" style={{ marginRight: 4 }} />
+                  <Text style={styles.compactLockedBadgeText}>
+                    {t('profile.locked')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {!roleSwitchUsed && (
+              <Text style={styles.compactRoleHint}>
+                {t('profile.oneTimeNotice')}
+              </Text>
+            )}
           </View>
         )}
 
         {/* SETTINGS & PREFERENCES */}
         <View style={styles.card}>
           <Text style={[styles.cardSectionTitle, { marginBottom: 12 }]}>
-            UYGULAMA VE TERCİHLER
+            {t('profile.appPreferences')}
           </Text>
 
-          <View style={styles.settingItemRow}>
+          <TouchableOpacity
+            style={styles.settingItemRow}
+            onPress={handleLanguageChange}
+            activeOpacity={0.7}
+          >
             <View style={[styles.settingIconWrap, { backgroundColor: '#F1F5F9' }]}>
               <Ionicons name="globe-outline" size={18} color="#334155" />
             </View>
-            <Text style={styles.settingItemLabel}>Uygulama Dili</Text>
+            <Text style={styles.settingItemLabel}>
+              {t('profile.appLanguage')}
+            </Text>
             <View style={styles.settingValueChip}>
-              <Text style={styles.settingValueChipText}>Türkçe</Text>
+              <Text style={styles.settingValueChipText}>
+                {language === 'en' ? 'English 🇬🇧' : 'Türkçe 🇹🇷'}
+              </Text>
             </View>
-          </View>
-
-          <View style={styles.settingItemRow}>
-            <View style={[styles.settingIconWrap, { backgroundColor: '#F1F5F9' }]}>
-              <Ionicons name="notifications-outline" size={18} color="#334155" />
-            </View>
-            <Text style={styles.settingItemLabel}>Çalışma Hatırlatıcıları</Text>
-            <View style={styles.settingValueChip}>
-              <Text style={styles.settingValueChipText}>Açık</Text>
-            </View>
-          </View>
+            <Ionicons name="chevron-forward" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
 
           <View style={[styles.settingItemRow, { borderBottomWidth: 0 }]}>
             <View style={[styles.settingIconWrap, { backgroundColor: '#F1F5F9' }]}>
               <Ionicons name="information-circle-outline" size={18} color="#334155" />
             </View>
-            <Text style={styles.settingItemLabel}>Sürüm</Text>
+            <Text style={styles.settingItemLabel}>
+              {t('profile.version')}
+            </Text>
             <Text style={styles.versionText}>v1.2.0</Text>
           </View>
         </View>
@@ -625,6 +793,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#007AFF',
   },
+  badgePill: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  badgePillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
   // CONNECTED MENTORS
   mentorItemRow: {
@@ -723,6 +903,100 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#EF4444',
+  },
+
+  // COMPACT ROLE CARD
+  compactRoleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  compactRoleTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  compactRoleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  compactRoleIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactRoleLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+  },
+  compactRoleValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 1,
+  },
+  compactSwitchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  compactSwitchBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  compactOneTimeBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  compactOneTimeBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  compactLockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  compactLockedBadgeText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  compactRoleHint: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 6,
+    marginLeft: 42,
   },
 });
 

@@ -11,6 +11,7 @@ export const TAB_ICON_CONFIG: Record<string, { icon: string; }> = {
     'Review Tests': { icon: 'checkbox-marked' },
     'Profile': { icon: 'account' },
     'Students': { icon: 'account-group'},
+    'Requests': { icon: 'bell-outline' },
 };
 
 export const getTabBarIcon = (routeName: string, icon: boolean, color: string, size: number) => {

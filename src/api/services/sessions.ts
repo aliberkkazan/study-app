@@ -121,16 +121,49 @@ export const getStudyProgress = async (timeframe: string = 'week'): Promise<any>
 
 export const createStudySession = async (payload: CreateSessionPayload): Promise<StudySession> => {
     try {
-        const response = await client.post<{ data: StudySession } | StudySession>('/sessions', payload);
-        const data = (response.data as { data?: StudySession }).data || (response.data as StudySession);
-        return data;
+        const backendPayload = {
+            taskId: payload.taskId,
+            taskTitle: payload.taskTitle,
+            courseName: payload.courseName,
+            topicName: payload.topicName,
+            actualDuration: payload.durationMinutes,
+            durationMinutes: payload.durationMinutes,
+            startedAt: payload.startedAt,
+            endedAt: payload.endedAt,
+            questionsSolved: payload.questionsSolved,
+            correctCount: payload.correctCount,
+            wrongCount: payload.incorrectCount,
+            incorrectCount: payload.incorrectCount,
+            notes: payload.notes,
+            mood: payload.mood,
+            proofPhotoUri: payload.proofPhotoUri,
+            markTaskCompleted: payload.markTaskCompleted,
+        };
+        const response = await client.post<{ data: any } | any>('/study-sessions', backendPayload);
+        const data = (response.data as { data?: any })?.data || response.data;
+        const normalized = mapBackendSessionToFrontend(data);
+
+        return {
+            ...normalized,
+            courseName: normalized.courseName || payload.courseName || 'Genel',
+            topicName: normalized.topicName || payload.topicName,
+            taskTitle: normalized.taskTitle || payload.taskTitle,
+            durationMinutes: normalized.durationMinutes || payload.durationMinutes,
+            questionsSolved:
+                normalized.questionsSolved ||
+                payload.questionsSolved ||
+                ((payload.correctCount || 0) + (payload.incorrectCount || 0)),
+            correctCount: normalized.correctCount ?? payload.correctCount,
+            incorrectCount: normalized.incorrectCount ?? payload.incorrectCount,
+            proofPhotoUri: payload.proofPhotoUri || normalized.proofPhotoUri,
+        };
     } catch (error) {
-        console.warn('API /sessions create failed on server, creating local session for offline continuity:', error);
+        console.warn('API /study-sessions create failed on server, creating local session for offline continuity:', error);
         const newSession: StudySession = {
             id: `session-${Date.now()}`,
             taskId: payload.taskId,
             taskTitle: payload.taskTitle,
-            courseName: payload.courseName,
+            courseName: payload.courseName || 'Genel',
             topicName: payload.topicName,
             durationMinutes: payload.durationMinutes,
             startedAt: payload.startedAt,

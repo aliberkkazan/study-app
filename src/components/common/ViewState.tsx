@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
-import { t } from '../../utils/i18n';
+import { useAppLanguage } from '../../utils/i18n';
 
 interface ViewStateProps {
     isLoading?: boolean;
@@ -19,6 +19,8 @@ export const ViewState: React.FC<ViewStateProps> = ({
     emptyMessage,
     children,
 }) => {
+    const { t } = useAppLanguage();
+
     if (isLoading) {
         return (
             <View style={styles.centerContainer}>
@@ -34,7 +36,7 @@ export const ViewState: React.FC<ViewStateProps> = ({
                 <Text style={styles.errorText}>{error}</Text>
                 {onRetry && (
                     <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-                        <Text style={styles.retryText}>{t('common.save')} {/* should be retry, let's use retry in i18n later */}</Text>
+                        <Text style={styles.retryText}>{t('common.retry')}</Text>
                     </TouchableOpacity>
                 )}
             </View>

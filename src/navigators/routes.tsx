@@ -17,6 +17,8 @@ import {
     ProfileSettings,
     ExamSelectionScreen,
     RoadmapScreen,
+    MentorStudentsScreen,
+    OnboardingScreen,
 } from '@screens';
 import { ProfileSettingsHeader } from '../components';
 import React from 'react';
@@ -49,6 +51,8 @@ export const AUTH_ROUTES: RouteConfig[] = [
 ];
 
 export const COMMON_STACK_ROUTES: RouteConfig[] = [
+    { name: 'Onboarding', component: OnboardingScreen, options: { headerShown: false } },
+    { name: 'RoleSelection', component: RoleSelectionScreen, options: { headerShown: false } },
     { name: 'JoinMentor', component: JoinMentorScreen, options: { headerShown: true, title: 'Join Mentor' } },
     { name: 'MentorRequests', component: MentorRequestsScreen, options: { headerShown: true, title: 'Requests' } },
     { name: 'Profile', component: ProfileScreen, options: { headerShown: true, title: 'Profile', headerRight: () => <ProfileSettingsHeader /> } },
@@ -65,7 +69,7 @@ export const COMMON_STACK_ROUTES: RouteConfig[] = [
         component: ExamSelectionScreen,
         options: {
             headerShown: true,
-            title: 'Hedef ve Sınav Seçimi',
+            title: 'Exam & Target Selection',
         },
     },
     {
@@ -73,7 +77,15 @@ export const COMMON_STACK_ROUTES: RouteConfig[] = [
         component: RoadmapScreen,
         options: {
             headerShown: true,
-            title: 'Çalışma Yol Haritası',
+            title: 'Study Roadmap',
+        },
+    },
+    {
+        name: 'MentorStudents',
+        component: MentorStudentsScreen,
+        options: {
+            headerShown: true,
+            title: 'My Students',
         },
     },
 ];

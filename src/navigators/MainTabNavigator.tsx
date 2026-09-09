@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TodayScreen, FocusScreen, ProgressScreen, ProfileScreen } from '../screens';
 import { getTabBarIcon } from './navigationUtils';
-import { t } from '../utils/i18n';
+import { useAppLanguage } from '../utils/i18n';
 import { ProfileSettingsHeader } from '../components';
 
 export type MainTabParamList = {
@@ -15,6 +15,8 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabNavigator = () => {
+    const { t } = useAppLanguage();
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from '@/components';
 import { lightTheme } from '../../../theme/theme';
-import { format } from 'date-fns';
+import { useAppLanguage } from '../../../utils/i18n';
 
 interface MentorRequestCardProps {
     item: {
@@ -16,11 +16,20 @@ interface MentorRequestCardProps {
 }
 
 export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onApprove, onReject, loading }) => {
+    const { t, language } = useAppLanguage();
+    const formattedDate = item.created_at
+        ? new Date(item.created_at).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })
+        : '';
+
     return (
         <View style={styles.card}>
             <View style={styles.info}>
                 <Text style={styles.name}>{item.student.name || 'Unknown User'}</Text>
-                <Text style={styles.date}>Requested: {format(new Date(item.created_at), 'MMM dd, yyyy')}</Text>
+                <Text style={styles.date}>{t('mentor.requestedOn')}: {formattedDate}</Text>
             </View>
             <View style={styles.actions}>
                 <Button
@@ -30,7 +39,7 @@ export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onAp
                     compact
                     loading={loading}
                 >
-                    Reject
+                    {t('common.reject')}
                 </Button>
                 <Button
                     mode="contained"
@@ -39,7 +48,7 @@ export const MentorRequestCard: React.FC<MentorRequestCardProps> = ({ item, onAp
                     compact
                     loading={loading}
                 >
-                    Approve
+                    {t('common.approve')}
                 </Button>
             </View>
         </View>

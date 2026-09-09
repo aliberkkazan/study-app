@@ -22,10 +22,12 @@ import { addNewTask, setActiveFocusTask } from '../../redux/tasksSlice';
 import { TrialExamModal } from '../../components/roadmap/TrialExamModal';
 import { RoadmapTaskItem, RoadmapTaskType } from '../../data/examPacks';
 import { getLocalDateString } from '../../utils/date';
+import { useAppLanguage, translateCourseName } from '../../utils/i18n';
 
 export const RoadmapScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
+  const { language, t } = useAppLanguage();
 
   const {
     selectedExam,
@@ -51,23 +53,23 @@ export const RoadmapScreen: React.FC = () => {
 
   const examTitle =
     selectedExam === 'yks'
-      ? `YKS 2027 (${targetTrack?.toUpperCase() || 'SAYISAL'})`
+      ? `YKS (${targetTrack?.toUpperCase() || (language === 'tr' ? 'SAYISAL' : 'NUMERICAL')})`
       : selectedExam === 'sat'
       ? 'Digital SAT'
-      : 'Sınavsız / Serbest Çalışma';
+      : t('profile.freeStudy');
 
   const getTypeBadgeStyle = (type: RoadmapTaskType) => {
     switch (type) {
       case 'learn':
-        return { bg: '#e7f5ff', text: '#1864ab', label: 'Öğren / Konu' };
+        return { bg: '#e7f5ff', text: '#1864ab', label: t('roadmap.badgeLearn') };
       case 'practice':
-        return { bg: '#ebfbee', text: '#2b8a3e', label: 'Soru Pratiği' };
+        return { bg: '#ebfbee', text: '#2b8a3e', label: t('roadmap.badgePractice') };
       case 'review':
-        return { bg: '#fff4e6', text: '#d9480f', label: 'Tekrar' };
+        return { bg: '#fff4e6', text: '#d9480f', label: t('roadmap.badgeReview') };
       case 'simulate':
-        return { bg: '#f3f0ff', text: '#6741d9', label: 'Deneme Sınavı' };
+        return { bg: '#f3f0ff', text: '#6741d9', label: t('roadmap.badgeSimulate') };
       default:
-        return { bg: '#f1f3f5', text: '#495057', label: 'Görev' };
+        return { bg: '#f1f3f5', text: '#495057', label: t('roadmap.badgeTask') };
     }
   };
 
@@ -93,14 +95,16 @@ export const RoadmapScreen: React.FC = () => {
         title: task.title,
         courseName: task.courseName,
         topicName: task.topicName,
-        goal: task.questionGoal ? `${task.questionGoal} soru hedefi` : `${task.targetMinutes} dk odaklanma`,
+        goal: task.questionGoal
+          ? `${task.questionGoal} ${t('roadmap.questions')}`
+          : `${task.targetMinutes} ${t('roadmap.minutesFocus')}`,
         dueDate: today,
         isFlexible: false,
       })
     );
-    Alert.alert('Eklendi', `"${task.title}" görevi Today listene eklendi!`, [
-      { text: 'Tamam' },
-      { text: "Today'e Git", onPress: () => navigation.navigate('Today') },
+    Alert.alert(t('roadmap.addedToToday'), t('roadmap.taskAddedToday', { title: task.title }), [
+      { text: t('common.ok') },
+      { text: t('roadmap.goToToday'), onPress: () => navigation.navigate('Today') },
     ]);
   };
 
@@ -115,7 +119,7 @@ export const RoadmapScreen: React.FC = () => {
               <Text style={styles.examTagText}>{examTitle}</Text>
             </View>
             <Text style={styles.targetLabel}>
-              Hedef: <Text style={styles.targetBold}>{targetScore || 'Belirlenmedi'}</Text>
+              {t('roadmap.target')}: <Text style={styles.targetBold}>{targetScore || t('roadmap.notSet')}</Text>
             </Text>
           </View>
           <TouchableOpacity
@@ -123,7 +127,7 @@ export const RoadmapScreen: React.FC = () => {
             onPress={() => navigation.navigate('ExamSelection')}
           >
             <Ionicons name="options-outline" size={16} color="#007AFF" />
-            <Text style={styles.changeExamText}>Düzenle</Text>
+            <Text style={styles.changeExamText}>{t('roadmap.change')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -132,7 +136,7 @@ export const RoadmapScreen: React.FC = () => {
           <View style={styles.milestoneProgress}>
             <View style={[styles.milestoneFill, { width: '35%' }]} />
           </View>
-          <Text style={styles.milestoneText}>Hafta 1 / 24 • Genel Müfredat İlerlemesi %35</Text>
+          <Text style={styles.milestoneText}>{t('roadmap.milestoneText')}</Text>
         </View>
       </View>
 
@@ -148,7 +152,7 @@ export const RoadmapScreen: React.FC = () => {
             color={activeTab === 'tasks' ? '#007AFF' : '#666'}
           />
           <Text style={[styles.tabText, activeTab === 'tasks' && styles.tabTextActive]}>
-            Önerilen Görevler ({suggestedTasks.length})
+            {t('roadmap.suggestedTasks')} ({suggestedTasks.length})
           </Text>
         </TouchableOpacity>
 
@@ -162,7 +166,7 @@ export const RoadmapScreen: React.FC = () => {
             color={activeTab === 'trials' ? '#007AFF' : '#666'}
           />
           <Text style={[styles.tabText, activeTab === 'trials' && styles.tabTextActive]}>
-            Deneme Sonuçları
+            {t('roadmap.trialResults')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -173,29 +177,29 @@ export const RoadmapScreen: React.FC = () => {
             {selectedExam === 'none' || !selectedExam ? (
               <View style={styles.emptyState}>
                 <Ionicons name="sparkles-outline" size={48} color="#adb5bd" />
-                <Text style={styles.emptyTitle}>Henüz bir sınav seçilmedi</Text>
+                <Text style={styles.emptyTitle}>{t('roadmap.noExamSelected')}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Sınavını seçerek haftalık önerilen yol haritası görevlerini görebilirsin.
+                  {t('roadmap.noExamSubtitle')}
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyActionBtn}
                   onPress={() => navigation.navigate('ExamSelection')}
                 >
-                  <Text style={styles.emptyActionText}>Sınav Seç</Text>
+                  <Text style={styles.emptyActionText}>{t('roadmap.selectExamBtn')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (!suggestedTasks || suggestedTasks.length === 0) ? (
               <View style={styles.emptyState}>
                 <Ionicons name="checkmark-done-circle-outline" size={48} color="#2b8a3e" />
-                <Text style={styles.emptyTitle}>Önerilen Görev Bulunmuyor</Text>
+                <Text style={styles.emptyTitle}>{t('roadmap.noSuggestedTasks')}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Bu haftaya ait tüm görevleri tamamlamış olabilirsin veya görev listesi henüz oluşturulmadı.
+                  {t('roadmap.noSuggestedSubtitle')}
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyActionBtn}
                   onPress={() => dispatch(resetRoadmapTasks())}
                 >
-                  <Text style={styles.emptyActionText}>Görevleri Yenile</Text>
+                  <Text style={styles.emptyActionText}>{t('roadmap.refreshTasksBtn')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -244,8 +248,8 @@ export const RoadmapScreen: React.FC = () => {
                     </Text>
 
                     <Text style={styles.taskMeta}>
-                      📚 {item.courseName} • 🎯 {item.topicName}
-                      {item.questionGoal ? ` • ✍️ ${item.questionGoal} Soru` : ''} • ⏱️ {item.targetMinutes} dk
+                      📚 {translateCourseName(item.courseName, language)} • 🎯 {item.topicName}
+                      {item.questionGoal ? ` • ✍️ ${item.questionGoal} ${t('roadmap.questions')}` : ''} • ⏱️ {item.targetMinutes} {language === 'tr' ? 'dk' : 'min'}
                     </Text>
 
                     {/* Actions */}
@@ -255,7 +259,7 @@ export const RoadmapScreen: React.FC = () => {
                         onPress={() => handleAddToToday(item)}
                       >
                         <Ionicons name="calendar-outline" size={15} color="#007AFF" />
-                        <Text style={styles.actionBtnSecondaryText}>Today'e Ekle</Text>
+                        <Text style={styles.actionBtnSecondaryText}>{t('roadmap.addToToday')}</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -263,7 +267,7 @@ export const RoadmapScreen: React.FC = () => {
                         onPress={() => handleStartFocus(item)}
                       >
                         <Ionicons name="play" size={14} color="#fff" />
-                        <Text style={styles.actionBtnPrimaryText}>Odaklan</Text>
+                        <Text style={styles.actionBtnPrimaryText}>{t('roadmap.focusNow')}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -280,7 +284,9 @@ export const RoadmapScreen: React.FC = () => {
             >
               <Ionicons name="add-circle" size={20} color="#fff" />
               <Text style={styles.logTrialHeaderBtnText}>
-                {selectedExam === 'sat' ? 'Yeni SAT Skoru Gir' : 'Yeni Deneme Neti Ekle'}
+                {selectedExam === 'sat'
+                  ? (language === 'en' ? 'Log New SAT Score' : 'Yeni SAT Skoru Gir')
+                  : (language === 'en' ? 'Log New Trial Exam' : 'Yeni Deneme Neti Ekle')}
               </Text>
             </TouchableOpacity>
 
@@ -289,30 +295,36 @@ export const RoadmapScreen: React.FC = () => {
               satTrials.length === 0 ? (
                 <View style={[styles.emptyState, { marginTop: 12 }]}>
                   <Ionicons name="document-text-outline" size={44} color="#adb5bd" />
-                  <Text style={styles.emptyTitle}>Henüz SAT Denemesi Eklenmedi</Text>
+                  <Text style={styles.emptyTitle}>
+                    {language === 'en' ? 'No SAT Trials Added Yet' : 'Henüz SAT Denemesi Eklenmedi'}
+                  </Text>
                   <Text style={styles.emptySubtitle}>
-                    Çözdüğün Bluebook veya deneme sınavlarının skorlarını yukarıdaki butona basarak kaydedebilirsin.
+                    {language === 'en'
+                      ? 'Record your Bluebook or practice test scores by tapping the button above.'
+                      : 'Çözdüğün Bluebook veya deneme sınavlarının skorlarını yukarıdaki butona basarak kaydedebilirsin.'}
                   </Text>
                 </View>
               ) : (
-                satTrials.map((t) => (
-                  <View key={t.id} style={styles.trialCard}>
+                satTrials.map((tItem) => (
+                  <View key={tItem.id} style={styles.trialCard}>
                     <View style={styles.trialCardHeader}>
-                      <Text style={styles.trialCardTitle}>{t.testName}</Text>
-                      <Text style={styles.trialCardDate}>{t.date}</Text>
+                      <Text style={styles.trialCardTitle}>{tItem.testName}</Text>
+                      <Text style={styles.trialCardDate}>{tItem.date}</Text>
                     </View>
                     <View style={styles.satScoresRow}>
                       <View style={styles.satScoreBox}>
                         <Text style={styles.satScoreLabel}>Reading & Writing</Text>
-                        <Text style={styles.satScoreValue}>{t.readingWritingScore}</Text>
+                        <Text style={styles.satScoreValue}>{tItem.readingWritingScore}</Text>
                       </View>
                       <View style={styles.satScoreBox}>
                         <Text style={styles.satScoreLabel}>Math</Text>
-                        <Text style={styles.satScoreValue}>{t.mathScore}</Text>
+                        <Text style={styles.satScoreValue}>{tItem.mathScore}</Text>
                       </View>
                       <View style={[styles.satScoreBox, styles.satTotalScoreBox]}>
-                        <Text style={styles.satTotalScoreLabel}>Toplam Skor</Text>
-                        <Text style={styles.satTotalScoreValue}>{t.totalScore} / 1600</Text>
+                        <Text style={styles.satTotalScoreLabel}>
+                          {language === 'en' ? 'Total Score' : 'Toplam Skor'}
+                        </Text>
+                        <Text style={styles.satTotalScoreValue}>{tItem.totalScore} / 1600</Text>
                       </View>
                     </View>
                   </View>
@@ -323,39 +335,47 @@ export const RoadmapScreen: React.FC = () => {
               yksTrials.length === 0 ? (
                 <View style={[styles.emptyState, { marginTop: 12 }]}>
                   <Ionicons name="document-text-outline" size={44} color="#adb5bd" />
-                  <Text style={styles.emptyTitle}>Henüz Deneme Neti Eklenmedi</Text>
+                  <Text style={styles.emptyTitle}>
+                    {language === 'en' ? 'No Trial Exams Logged Yet' : 'Henüz Deneme Neti Eklenmedi'}
+                  </Text>
                   <Text style={styles.emptySubtitle}>
-                    Girdiğin TYT veya AYT deneme sınavı netlerini yukarıdaki butona basarak kaydedebilirsin.
+                    {language === 'en'
+                      ? 'Record your TYT or AYT practice test scores by tapping the button above.'
+                      : 'Girdiğin TYT veya AYT deneme sınavı netlerini yukarıdaki butona basarak kaydedebilirsin.'}
                   </Text>
                 </View>
               ) : (
-                yksTrials.map((t) => (
-                  <View key={t.id} style={styles.trialCard}>
+                yksTrials.map((tItem) => (
+                  <View key={tItem.id} style={styles.trialCard}>
                     <View style={styles.trialCardHeader}>
                       <View style={styles.trialBadgeRow}>
                         <View style={styles.examSubtypeBadge}>
-                          <Text style={styles.examSubtypeText}>{t.examType}</Text>
+                          <Text style={styles.examSubtypeText}>{tItem.examType}</Text>
                         </View>
-                        <Text style={styles.trialCardTitle}>{t.publisher || 'Deneme'}</Text>
+                        <Text style={styles.trialCardTitle}>
+                          {tItem.publisher || (language === 'en' ? 'Trial' : 'Deneme')}
+                        </Text>
                       </View>
-                      <Text style={styles.trialCardDate}>{t.date}</Text>
+                      <Text style={styles.trialCardDate}>{tItem.date}</Text>
                     </View>
 
                     {/* Net Breakdown */}
                     <View style={styles.subjectsGrid}>
-                      {t.subjects.map((sub, sIdx) => (
+                      {tItem.subjects.map((sub, sIdx) => (
                         <View key={sIdx} style={styles.subjectNetItem}>
                           <Text style={styles.subjectNetName}>{sub.name}</Text>
                           <Text style={styles.subjectNetNumbers}>
-                            {sub.correct}D {sub.incorrect}Y = <Text style={styles.netHighlight}>{sub.net}</Text>
+                            {sub.correct}{language === 'tr' ? 'D' : 'C'} {sub.incorrect}{language === 'tr' ? 'Y' : 'W'} = <Text style={styles.netHighlight}>{sub.net}</Text>
                           </Text>
                         </View>
                       ))}
                     </View>
 
                     <View style={styles.trialFooter}>
-                      <Text style={styles.trialTotalLabel}>Toplam Net:</Text>
-                      <Text style={styles.trialTotalValue}>{t.totalNet} Net</Text>
+                      <Text style={styles.trialTotalLabel}>
+                        {language === 'en' ? 'Total Net:' : 'Toplam Net:'}
+                      </Text>
+                      <Text style={styles.trialTotalValue}>{tItem.totalNet} Net</Text>
                     </View>
                   </View>
                 ))

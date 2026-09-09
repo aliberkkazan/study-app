@@ -22,9 +22,9 @@ const initialState: TasksState = {
 // Async Thunks
 export const fetchTasks = createAsyncThunk(
     'tasks/fetchTasks',
-    async (_, { rejectWithValue }) => {
+    async (params: { studentId?: string; status?: string; subject?: string } | void, { rejectWithValue }) => {
         try {
-            const data = await taskService.getTasks();
+            const data = await taskService.getTasks(params || undefined);
             return data;
         } catch (error: unknown) {
             const appError = handleApiError(error);
@@ -98,6 +98,19 @@ export const unarchiveExistingTask = createAsyncThunk(
     }
 );
 
+export const deleteExistingTask = createAsyncThunk(
+    'tasks/deleteExistingTask',
+    async (taskId: string, { rejectWithValue }) => {
+        try {
+            await taskService.deleteTask(taskId);
+            return taskId;
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
+        }
+    }
+);
+
 const tasksSlice = createSlice({
     name: 'tasks',
     initialState,
@@ -150,6 +163,14 @@ const tasksSlice = createSlice({
                 }
                 if (state.activeFocusTask && state.activeFocusTask.id === action.payload.id) {
                     state.activeFocusTask = action.payload;
+                }
+            })
+
+            // deleteExistingTask
+            .addCase(deleteExistingTask.fulfilled, (state, action: PayloadAction<string>) => {
+                state.items = state.items.filter((t) => t.id !== action.payload);
+                if (state.activeFocusTask && state.activeFocusTask.id === action.payload) {
+                    state.activeFocusTask = null;
                 }
             })
 

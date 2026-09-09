@@ -19,7 +19,7 @@ import { recordSession } from '../../redux/sessionsSlice';
 import { Task, CreateSessionPayload } from '../../api/types';
 import { SessionResultModal } from '../../components/focus/SessionResultModal';
 import { useFocusTimer, TimerMode } from '../../hooks/useFocusTimer';
-import { t } from '../../utils/i18n';
+import { useAppLanguage, translateCourseName } from '../../utils/i18n';
 
 const PRESET_DURATIONS: Record<TimerMode, number[]> = {
     focus: [15, 25, 45, 60],
@@ -29,6 +29,7 @@ const PRESET_DURATIONS: Record<TimerMode, number[]> = {
 
 const FocusScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
+    const { language, t } = useAppLanguage();
     const activeTask = useSelector((state: RootState) => state.tasks.activeFocusTask);
     const allTasks = useSelector((state: RootState) => state.tasks.items);
     const sessionStats = useSelector((state: RootState) => state.sessions.stats);
@@ -277,7 +278,7 @@ const FocusScreen: React.FC = () => {
                             {activeTask.courseName ? (
                                 <View style={styles.badgeCourse}>
                                     <Text style={styles.badgeCourseText}>
-                                        {activeTask.courseName}
+                                        {translateCourseName(activeTask.courseName, language)}
                                     </Text>
                                 </View>
                             ) : null}
@@ -583,7 +584,7 @@ const FocusScreen: React.FC = () => {
                                             <View style={styles.taskPickerItemMeta}>
                                                 {task.courseName ? (
                                                     <Text style={styles.taskPickerCourse}>
-                                                        {task.courseName}
+                                                        {translateCourseName(task.courseName, language)}
                                                     </Text>
                                                 ) : null}
                                                 {task.topicName ? (

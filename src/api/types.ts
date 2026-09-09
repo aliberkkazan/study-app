@@ -18,6 +18,7 @@ export type TaskCategory = 'today' | 'upcoming' | 'flexible' | 'archived';
 export interface Task {
     id: string;
     title: string;
+    description?: string;
     courseId?: string;
     courseName?: string;
     topicId?: string;
@@ -28,6 +29,8 @@ export interface Task {
     isFlexible?: boolean;
     assignerId?: string;
     assignerName?: string;
+    student?: { id: string; name: string };
+    mentor?: { id: string; name: string };
     status: TaskStatus;
     completed: boolean;
     createdAt: string;
@@ -36,22 +39,28 @@ export interface Task {
 
 export interface CreateTaskPayload {
     title: string;
+    description?: string;
     courseName?: string;
     topicName?: string;
     source?: string;
     goal?: string;
     dueDate?: string;
+    scheduledDate?: string;
     isFlexible?: boolean;
+    studentId?: string;
+    assignedBy?: string;
 }
 
 export interface UpdateTaskPayload {
     id: string;
     title?: string;
+    description?: string;
     courseName?: string;
     topicName?: string;
     source?: string;
     goal?: string;
     dueDate?: string;
+    scheduledDate?: string;
     isFlexible?: boolean;
     completed?: boolean;
     status?: TaskStatus;

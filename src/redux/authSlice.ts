@@ -11,6 +11,7 @@ interface User {
     email?: string;
     mentorCode?: string;
     mentors?: Record<string, unknown>[];
+    hasSwitchedRole?: boolean;
 }
 
 interface AuthState {
@@ -37,7 +38,8 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWi
         const session = await loadAuthSession();
         if (session && session.token && session.user) {
             setAuthToken(session.token);
-            return session;
+            const userWithId = { ...session.user, id: session.user.id || session.user.sub };
+            return { token: session.token, user: userWithId };
         }
         return null;
     } catch (error) {
@@ -88,12 +90,13 @@ export const fetchCurrentUser = createAsyncThunk(
         try {
             const response = await client.get('/users/profile');
             if (response.data) {
+                const userWithId = { ...response.data, id: response.data.id || response.data.sub };
                 // Update storage
                 const session = await loadAuthSession();
                 if (session && session.token) {
-                    saveAuthSession(session.token, response.data);
+                    saveAuthSession(session.token, userWithId);
                 }
-                return response.data;
+                return userWithId;
             }
             return null;
         } catch (error: unknown) {
@@ -124,7 +127,50 @@ export const refreshMentorCode = createAsyncThunk(
     }
 );
 
-const deleteAccount = createAsyncThunk(
+export const updateUserRole = createAsyncThunk(
+    'auth/updateUserRole',
+    async (role: 'student' | 'mentor', { getState, rejectWithValue }) => {
+        try {
+            const state = getState() as { auth: AuthState };
+            const userId = state.auth.user?.id;
+            if (!userId) {
+                return rejectWithValue('User ID not found');
+            }
+            const response = await client.patch(`/users/${userId}`, { role });
+            const updatedUser = response.data || { ...state.auth.user, role };
+            const session = await loadAuthSession();
+            if (session && session.token) {
+                await saveAuthSession(session.token, updatedUser);
+            }
+            return updatedUser;
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
+        }
+    }
+);
+
+export const switchUserRole = createAsyncThunk(
+    'auth/switchUserRole',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await client.post('/users/switch-role');
+            const updatedUser = response.data;
+            const userWithId = { ...updatedUser, id: updatedUser.id || updatedUser.sub };
+            const session = await loadAuthSession();
+            if (session && session.token) {
+                await saveAuthSession(session.token, userWithId);
+            }
+            return userWithId;
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
+        }
+    }
+);
+
+
+export const deleteAccount = createAsyncThunk(
     'auth/deleteAccount',
     async (_, { getState, rejectWithValue }) => {
         try {
@@ -145,8 +191,6 @@ const deleteAccount = createAsyncThunk(
     }
 );
 
-export { deleteAccount };
-
 export const logout = createAsyncThunk(
     'auth/logout',
     async (_, { rejectWithValue }) => {
@@ -164,8 +208,26 @@ export const logout = createAsyncThunk(
 const authSlice = createSlice({
     name: 'auth',
     initialState,
-    reducers: {},
+    reducers: {
+        setUserRole: (state, action: PayloadAction<'student' | 'mentor'>) => {
+            if (state.user) {
+                state.user.role = action.payload;
+            }
+        },
+    },
     extraReducers: (builder) => {
+        // Update User Role
+        builder.addCase(updateUserRole.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.user = action.payload;
+            }
+        });
+        // Switch User Role
+        builder.addCase(switchUserRole.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.user = action.payload;
+            }
+        });
         // Logout
         builder.addCase(logout.fulfilled, (state) => {
             state.user = null;
@@ -249,5 +311,7 @@ const authSlice = createSlice({
         });
     }
 });
+
+export const { setUserRole } = authSlice.actions;
 
 export default authSlice.reducer;

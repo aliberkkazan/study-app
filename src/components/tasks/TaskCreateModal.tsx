@@ -56,7 +56,7 @@ export const TaskCreateModal: React.FC<Props> = ({ visible, onClose, onSubmit })
 
     const handleSubmit = async () => {
         if (!title.trim()) {
-            setError('Please enter a task title');
+            setError(t('task.pleaseEnterTitle'));
             return;
         }
 
@@ -90,7 +90,7 @@ export const TaskCreateModal: React.FC<Props> = ({ visible, onClose, onSubmit })
             });
             handleClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to create task');
+            setError(err instanceof Error ? err.message : t('task.failedCreate'));
             setSubmitting(false);
         }
     };

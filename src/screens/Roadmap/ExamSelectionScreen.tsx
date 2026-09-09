@@ -26,10 +26,12 @@ import {
 } from '../../redux/roadmapSlice';
 import { updateStudyProfile } from '../../api/services/studyProfile';
 import { YKS_TRACKS } from '../../data/examPacks';
+import { useAppLanguage } from '../../utils/i18n';
 
 export const ExamSelectionScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
+  const { language, t } = useAppLanguage();
 
   const {
     selectedCountry,
@@ -68,9 +70,9 @@ export const ExamSelectionScreen: React.FC = () => {
         // Ignore background sync error
       }
       Alert.alert(
-        'Serbest Çalışma Modu Aktif',
-        'Herhangi bir sınava bağlı kalmadan görevlerini ekleyebilir ve odaklanabilirsin.',
-        [{ text: 'Tamam', onPress: () => navigation.goBack() }]
+        t('roadmap.freeStudyActive'),
+        t('roadmap.freeStudyActiveDesc'),
+        [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
       );
       return;
     }
@@ -105,11 +107,11 @@ export const ExamSelectionScreen: React.FC = () => {
       // Ignore background sync error
     }
     Alert.alert(
-      'YKS Yol Haritanız Hazır!',
-      `${selectedTrack.toUpperCase()} alanına uygun haftalık roadmap ve konu dağılımınız oluşturuldu.`,
+      t('roadmap.yksReadyTitle'),
+      t('roadmap.yksReadyDesc'),
       [
         {
-          text: 'Yol Haritasına Git',
+          text: t('roadmap.goToRoadmap'),
           onPress: () => {
             navigation.navigate('Roadmap');
           },
@@ -136,17 +138,27 @@ export const ExamSelectionScreen: React.FC = () => {
       // Ignore background sync error
     }
     Alert.alert(
-      'Digital SAT Roadmap Ready!',
-      `Target score of ${satTargetScore} configured with module practice tasks.`,
+      t('roadmap.satReadyTitle'),
+      t('roadmap.satReadyDesc'),
       [
         {
-          text: 'View Roadmap',
+          text: t('roadmap.viewRoadmap'),
           onPress: () => {
             navigation.navigate('Roadmap');
           },
         },
       ]
     );
+  };
+
+  const getTrackName = (id: string, defaultName: string) => {
+    switch (id) {
+      case 'sayisal': return t('roadmap.trackSayisal');
+      case 'esit_agirlik': return t('roadmap.trackEsitAgirlik');
+      case 'sozel': return t('roadmap.trackSozel');
+      case 'dil': return t('roadmap.trackDil');
+      default: return defaultName;
+    }
   };
 
   return (
@@ -156,7 +168,7 @@ export const ExamSelectionScreen: React.FC = () => {
         <View style={styles.regionLeft}>
           <Text style={styles.regionFlag}>{currentCountryInfo.flag}</Text>
           <View>
-            <Text style={styles.regionLabel}>Bölge / Konum</Text>
+            <Text style={styles.regionLabel}>{t('roadmap.regionLabel')}</Text>
             <Text style={styles.regionName}>{currentCountryInfo.name}</Text>
           </View>
         </View>
@@ -164,15 +176,15 @@ export const ExamSelectionScreen: React.FC = () => {
           style={styles.changeRegionBtn}
           onPress={() => setCountryPickerVisible(true)}
         >
-          <Text style={styles.changeRegionText}>Bölge Değiştir</Text>
+          <Text style={styles.changeRegionText}>{t('roadmap.changeRegion')}</Text>
           <Ionicons name="chevron-forward" size={14} color="#007AFF" />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.screenTitle}>Hedefini veya Sınavını Seç</Text>
+        <Text style={styles.screenTitle}>{t('roadmap.selectGoalTitle')}</Text>
         <Text style={styles.screenSubtitle}>
-          Sınavına uygun çalışma programı ve deneme takibi oluştur veya serbest çalışma düzenini koru.
+          {t('roadmap.selectGoalSubtitle')}
         </Text>
 
         {/* Exams List */}
@@ -192,7 +204,9 @@ export const ExamSelectionScreen: React.FC = () => {
             >
               <View style={styles.examCardHeader}>
                 <View style={styles.examTitleRow}>
-                  <Text style={styles.examName}>{exam.name}</Text>
+                  <Text style={styles.examName}>
+                    {exam.isFreeStudy ? t('roadmap.freeStudyTitle') : exam.name}
+                  </Text>
                   {exam.badge && (
                     <View style={[styles.badge, exam.isFreeStudy && styles.freeBadge]}>
                       <Text
@@ -218,8 +232,12 @@ export const ExamSelectionScreen: React.FC = () => {
                   color={isSelected || exam.isFreeStudy ? '#007AFF' : '#adb5bd'}
                 />
               </View>
-              <Text style={styles.examFullName}>{exam.fullName}</Text>
-              <Text style={styles.examDesc}>{exam.description}</Text>
+              <Text style={styles.examFullName}>
+                {exam.isFreeStudy ? t('roadmap.freeStudyTitle') : exam.fullName}
+              </Text>
+              <Text style={styles.examDesc}>
+                {exam.isFreeStudy ? t('roadmap.freeStudyDesc') : exam.description}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -227,9 +245,9 @@ export const ExamSelectionScreen: React.FC = () => {
         {/* YKS Configuration Setup */}
         {selectedExamId === 'yks' && (
           <View style={styles.setupCard}>
-            <Text style={styles.setupTitle}>YKS Hedef ve Alan Belirleme</Text>
+            <Text style={styles.setupTitle}>{t('roadmap.yksSetupTitle')}</Text>
 
-            <Text style={styles.setupFieldLabel}>1. Çalışma Alanı</Text>
+            <Text style={styles.setupFieldLabel}>{t('roadmap.studyTrackLabel')}</Text>
             <View style={styles.tracksGrid}>
               {YKS_TRACKS.map((tr) => (
                 <TouchableOpacity
@@ -246,23 +264,23 @@ export const ExamSelectionScreen: React.FC = () => {
                       selectedTrack === tr.id && styles.trackOptionTextActive,
                     ]}
                   >
-                    {tr.name}
+                    {getTrackName(tr.id, tr.name)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.setupFieldLabel}>2. Hedef Başarı Sıralaması / Net</Text>
+            <Text style={styles.setupFieldLabel}>{t('roadmap.targetRankScoreLabel')}</Text>
             <TextInput
               style={styles.setupInput}
               value={targetScore}
               onChangeText={setTargetScore}
-              placeholder="Örn: İlk 10.000 veya 95 TYT / 65 AYT Net"
+              placeholder={t('roadmap.targetRankScorePlaceholder')}
               placeholderTextColor="#999"
             />
 
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmYKS}>
-              <Text style={styles.confirmBtnText}>YKS Yol Haritasını Başlat</Text>
+              <Text style={styles.confirmBtnText}>{t('roadmap.startYksRoadmap')}</Text>
               <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
             </TouchableOpacity>
           </View>
@@ -271,20 +289,20 @@ export const ExamSelectionScreen: React.FC = () => {
         {/* SAT Configuration Setup */}
         {selectedExamId === 'sat' && (
           <View style={styles.setupCard}>
-            <Text style={styles.setupTitle}>Digital SAT Goal Setup</Text>
+            <Text style={styles.setupTitle}>{t('roadmap.satSetupTitle')}</Text>
 
-            <Text style={styles.setupFieldLabel}>Target Composite Score (400 - 1600)</Text>
+            <Text style={styles.setupFieldLabel}>{t('roadmap.satScoreLabel')}</Text>
             <TextInput
               style={styles.setupInput}
               keyboardType="number-pad"
               value={satTargetScore}
               onChangeText={setSatTargetScore}
-              placeholder="e.g. 1450"
+              placeholder={t('roadmap.satScorePlaceholder')}
               placeholderTextColor="#999"
             />
 
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmSAT}>
-              <Text style={styles.confirmBtnText}>Generate SAT Roadmap</Text>
+              <Text style={styles.confirmBtnText}>{t('roadmap.generateSatRoadmap')}</Text>
               <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
             </TouchableOpacity>
           </View>
@@ -298,13 +316,13 @@ export const ExamSelectionScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Bölge / Ülke Seçin</Text>
+              <Text style={styles.modalTitle}>{t('roadmap.selectRegionTitle')}</Text>
               <TouchableOpacity onPress={() => setCountryPickerVisible(false)}>
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSubtitle}>
-              Sınav seçenekleri bulunduğunuz ülkeye göre listelenir.
+              {t('roadmap.selectRegionSubtitle')}
             </Text>
 
             {SUPPORTED_COUNTRIES.map((item) => (
@@ -321,7 +339,7 @@ export const ExamSelectionScreen: React.FC = () => {
                   <Text style={styles.countryRowName}>{item.name}</Text>
                   <Text style={styles.countryRowCode}>
                     {item.code === 'US'
-                      ? 'USA (SAT, ACT - YKS gizlenir)'
+                      ? 'USA (SAT, ACT - YKS hidden)'
                       : item.code === 'TR'
                       ? 'Türkiye (YKS TYT/AYT & Genel)'
                       : 'International'}
