@@ -33,6 +33,7 @@ import {
   saveLanguagePreference,
 } from '../../utils/userPreferences';
 import { useAppLanguage } from '../../utils/i18n';
+import DeviceInfo from 'react-native-device-info';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -563,7 +564,7 @@ const ProfileScreen = () => {
             <Text style={styles.settingItemLabel}>
               {t('profile.version')}
             </Text>
-            <Text style={styles.versionText}>v1.2.0</Text>
+            <Text style={styles.versionText}>{DeviceInfo.getVersion()}</Text>
           </View>
         </View>
 
