@@ -70,6 +70,9 @@ const translations: Record<Language, Record<string, string>> = {
     'task.unknownUser': 'User',
     'task.studySession': 'Study Session',
     'task.generalStudy': 'General Study',
+    'task.deleteTask': 'Delete Task',
+    'task.deleteTaskConfirm': 'Are you sure you want to delete this task?',
+    'task.taskDeleted': 'Task deleted successfully',
 
     // Focus
     'focus.focus': 'Focus',
@@ -279,6 +282,9 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.connectedMentors': 'CONNECTED MENTOR(S)',
     'profile.mentorsSub': 'Mentors guiding your study journey',
     'profile.active': 'Active',
+    'profile.disconnectMentor': 'Disconnect Mentor',
+    'profile.disconnectMentorConfirm': 'Are you sure you want to disconnect from mentor "{name}"?',
+    'profile.mentorDisconnected': 'Mentor disconnected successfully',
     'profile.addNewMentor': 'Add New Mentor',
     'profile.connectMentorSub': 'Connect to a mentor to receive tailored weekly tasks and reviewed study plans.',
     'profile.connectWithCode': 'Connect with Mentor Code',
@@ -494,6 +500,9 @@ const translations: Record<Language, Record<string, string>> = {
     'task.unknownUser': 'Kullanıcı',
     'task.studySession': 'Çalışma Oturumu',
     'task.generalStudy': 'Genel Çalışma',
+    'task.deleteTask': 'Görevi Sil',
+    'task.deleteTaskConfirm': 'Bu görevi silmek istediğinize emin misiniz?',
+    'task.taskDeleted': 'Görev başarıyla silindi',
 
     // Focus / Odaklan
     'focus.focus': 'Odaklan',
@@ -703,6 +712,9 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.connectedMentors': 'BAĞLI MENTOR(LAR)',
     'profile.mentorsSub': 'Gelişiminizi takip eden mentorlarınız',
     'profile.active': 'Aktif',
+    'profile.disconnectMentor': 'Mentör Bağlantısını Kes',
+    'profile.disconnectMentorConfirm': '"{name}" adlı mentör ile bağlantınızı kesmek istediğinize emin misiniz?',
+    'profile.mentorDisconnected': 'Mentör bağlantısı başarıyla kesildi',
     'profile.addNewMentor': 'Yeni Mentor Ekle',
     'profile.connectMentorSub': 'Bir mentora bağlanarak haftalık program ve mentor kontrolünde çalışma görevleri alabilirsin.',
     'profile.connectWithCode': 'Mentor Kodu ile Bağlan',

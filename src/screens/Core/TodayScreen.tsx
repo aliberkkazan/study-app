@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Loading } from '@/components';
 import { MainTabParamList } from '../../navigators/MainTabNavigator';
 import { RootState, AppDispatch } from '../../redux/store';
 import {
@@ -22,6 +23,7 @@ import {
     toggleTask,
     archiveExistingTask,
     unarchiveExistingTask,
+    deleteExistingTask,
     setSelectedCategory,
     setActiveFocusTask,
 } from '../../redux/tasksSlice';
@@ -54,6 +56,7 @@ const TodayScreen: React.FC = () => {
     const [completionModalVisible, setCompletionModalVisible] = useState(false);
     const [completingTask, setCompletingTask] = useState<Task | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
     const loadTasks = useCallback(() => {
         dispatch(fetchTasks());
@@ -234,8 +237,28 @@ const TodayScreen: React.FC = () => {
         navigation.navigate('Focus');
     };
 
-    const handleArchive = (task: Task) => {
-        dispatch(archiveExistingTask(task.id));
+    const handleDelete = (task: Task) => {
+        Alert.alert(
+            t('task.deleteTask'),
+            t('task.deleteTaskConfirm'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.delete'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        setDeletingTaskId(task.id);
+                        try {
+                            await dispatch(deleteExistingTask(task.id)).unwrap();
+                        } catch (err: any) {
+                            Alert.alert(t('common.error'), err || t('common.error'));
+                        } finally {
+                            setDeletingTaskId(null);
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     const handleUnarchive = (task: Task) => {
@@ -340,9 +363,11 @@ const TodayScreen: React.FC = () => {
                             task={item}
                             onToggleComplete={handleToggle}
                             onStartFocus={handleStartFocus}
-                            onArchive={handleArchive}
+                            onDelete={handleDelete}
+                            onArchive={handleDelete}
                             onUnarchive={handleUnarchive}
                             onUploadImage={handleUploadTaskImage}
+                            isDeleting={deletingTaskId === item.id}
                         />
                     )}
                     ListEmptyComponent={
@@ -393,6 +418,8 @@ const TodayScreen: React.FC = () => {
                 onDirectComplete={handleDirectComplete}
                 onSubmitWithSession={handleSubmitSessionForTask}
             />
+
+            <Loading visible={!!deletingTaskId} />
         </View>
     );
 };

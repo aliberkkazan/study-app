@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import client from '../api/client';
 import { handleApiError } from '../api/error';
+import { fetchCurrentUser } from './authSlice';
 
 export interface TestSubmission {
   id: string;
@@ -284,6 +285,20 @@ export const removeStudent = createAsyncThunk(
     }
 );
 
+export const removeMentor = createAsyncThunk(
+    'data/removeMentor',
+    async (mentorId: string, { dispatch, rejectWithValue }) => {
+        try {
+            await client.delete(`/users/mentors/${mentorId}`);
+            dispatch(fetchCurrentUser());
+            return { id: mentorId };
+        } catch (error: unknown) {
+            const appError = handleApiError(error);
+            return rejectWithValue(appError.message);
+        }
+    }
+);
+
 const dataSlice = createSlice({
   name: 'data',
   initialState,
@@ -356,8 +371,30 @@ const dataSlice = createSlice({
             state.loading = false;
             state.students = action.payload;
         })
+        .addCase(removeStudent.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
         .addCase(removeStudent.fulfilled, (state, action) => {
-             state.students = state.students.filter(s => s.id !== action.payload.id);
+            state.loading = false;
+            state.students = state.students.filter(s => s.id !== action.payload.id);
+        })
+        .addCase(removeStudent.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+        })
+
+        // Mentors
+        .addCase(removeMentor.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(removeMentor.fulfilled, (state) => {
+            state.loading = false;
+        })
+        .addCase(removeMentor.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
         })
         .addCase(fetchStudents.rejected, (state, action) => {
             state.loading = false;

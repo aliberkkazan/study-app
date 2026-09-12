@@ -348,6 +348,16 @@ const authSlice = createSlice({
                 state.user = action.payload;
             }
         });
+
+        // Disconnect Mentor (from dataSlice)
+        builder.addMatcher(
+            (action) => action.type === 'data/removeMentor/fulfilled',
+            (state, action: any) => {
+                if (state.user && state.user.mentors) {
+                    state.user.mentors = state.user.mentors.filter((m: any) => m.id !== action.payload.id);
+                }
+            }
+        );
     },
 });
 

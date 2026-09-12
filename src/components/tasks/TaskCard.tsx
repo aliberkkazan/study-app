@@ -1,26 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Task } from '../../api/types';
 import { useAppLanguage, translateCourseName } from '../../utils/i18n';
 import { formatDisplayDate } from '../../utils/date';
+import { Icon } from '../shared';
 
 interface Props {
     task: Task;
     onToggleComplete: (task: Task) => void;
     onStartFocus: (task: Task) => void;
-    onArchive: (task: Task) => void;
+    onDelete?: (task: Task) => void;
+    onArchive?: (task: Task) => void;
     onUnarchive?: (task: Task) => void;
     onUploadImage?: (task: Task) => void;
+    isDeleting?: boolean;
 }
 
 export const TaskCard: React.FC<Props> = ({
     task,
     onToggleComplete,
     onStartFocus,
+    onDelete,
     onArchive,
     onUnarchive,
     onUploadImage,
+    isDeleting = false,
 }) => {
     const { language, t } = useAppLanguage();
     const isCompleted = task.completed || task.status === 'completed';
@@ -116,11 +121,16 @@ export const TaskCard: React.FC<Props> = ({
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
-                            onPress={() => onArchive(task)}
+                            onPress={() => (onDelete ? onDelete(task) : onArchive && onArchive(task))}
                             style={styles.iconButton}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            disabled={isDeleting}
                         >
-                            <Ionicons name="archive-outline" size={18} color="#94A3B8" />
+                            {isDeleting ? (
+                                <ActivityIndicator size="small" color="#EF4444" />
+                            ) : (
+                                <Icon source="delete" size={18} color="#EF4444" />
+                            )}
                         </TouchableOpacity>
                     )}
                 </View>

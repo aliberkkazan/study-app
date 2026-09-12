@@ -10,8 +10,9 @@ import {
   Clipboard,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-import { Loading } from '@/components';
+import { Icon, Loading } from '@/components';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import {
@@ -25,7 +26,7 @@ import {
   fetchStudyProgress,
   setAppLanguage,
 } from '../../redux/roadmapSlice';
-import { fetchStudents, fetchConnectionRequests } from '../../redux/dataSlice';
+import { fetchStudents, fetchConnectionRequests, removeMentor } from '../../redux/dataSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -57,8 +58,9 @@ const ProfileScreen = () => {
   const displayedUser = isViewingStudent ? studentParam : currentUser;
 
   const roleSwitchUsed = !!currentUser?.hasSwitchedRole;
+  const [disconnectingMentorId, setDisconnectingMentorId] = React.useState<string | null>(null);
 
-  const loading = authLoading || dataLoading;
+  const loading = authLoading || dataLoading || !!disconnectingMentorId;
 
   React.useEffect(() => {
     if (!isViewingStudent && isAuthenticated) {
@@ -169,6 +171,31 @@ const ProfileScreen = () => {
     );
   };
 
+  const handleDisconnectMentor = (mentor: { id: string; name: string }) => {
+    Alert.alert(
+      t('profile.disconnectMentor'),
+      t('profile.disconnectMentorConfirm', { name: mentor.name }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            setDisconnectingMentorId(mentor.id);
+            try {
+              await dispatch(removeMentor(mentor.id)).unwrap();
+              Alert.alert(t('common.success'), t('profile.mentorDisconnected'));
+            } catch (err: any) {
+              Alert.alert(t('common.error'), err || t('common.error'));
+            } finally {
+              setDisconnectingMentorId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const copyToClipboard = () => {
     if (displayedUser?.mentorCode) {
       Clipboard.setString(displayedUser.mentorCode);
@@ -189,15 +216,15 @@ const ProfileScreen = () => {
     selectedExam === 'yks'
       ? `YKS (${targetTrack ? targetTrack.toUpperCase() : t('profile.noTrack')})`
       : selectedExam === 'sat'
-      ? `Digital SAT (${targetTrack ? targetTrack.toUpperCase() : t('profile.general')})`
-      : t('profile.freeStudy');
+        ? `Digital SAT (${targetTrack ? targetTrack.toUpperCase() : t('profile.general')})`
+        : t('profile.freeStudy');
 
   const roleLabel =
     displayedUser?.role === 'mentor'
       ? t('profile.roleMentor')
       : displayedUser?.role === 'admin'
-      ? t('profile.roleAdmin')
-      : t('profile.roleStudent');
+        ? t('profile.roleAdmin')
+        : t('profile.roleStudent');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -374,6 +401,18 @@ const ProfileScreen = () => {
                         {t('profile.active')}
                       </Text>
                     </View>
+                    <TouchableOpacity
+                      onPress={() => handleDisconnectMentor(m)}
+                      style={styles.disconnectMentorBtn}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      disabled={disconnectingMentorId === m.id || loading}
+                    >
+                      {disconnectingMentorId === m.id ? (
+                        <ActivityIndicator size="small" color="#EF4444" />
+                      ) : (
+                        <Icon source="link-off" size={16} color="#EF4444" />
+                      )}
+                    </TouchableOpacity>
                   </View>
                 ))}
 
@@ -879,6 +918,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#15803D',
+  },
+  disconnectMentorBtn: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
   },
 
   // SETTINGS ROWS

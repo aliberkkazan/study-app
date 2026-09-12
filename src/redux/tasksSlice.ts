@@ -74,9 +74,10 @@ export const toggleTask = createAsyncThunk(
 
 export const archiveExistingTask = createAsyncThunk(
     'tasks/archiveTask',
-    async (taskId: string, { rejectWithValue }) => {
+    async (taskId: string, { dispatch, rejectWithValue }) => {
         try {
             const data = await taskService.archiveTask(taskId);
+            dispatch(fetchTasks());
             return data;
         } catch (error: unknown) {
             const appError = handleApiError(error);
@@ -87,9 +88,10 @@ export const archiveExistingTask = createAsyncThunk(
 
 export const unarchiveExistingTask = createAsyncThunk(
     'tasks/unarchiveTask',
-    async (taskId: string, { rejectWithValue }) => {
+    async (taskId: string, { dispatch, rejectWithValue }) => {
         try {
             const data = await taskService.unarchiveTask(taskId);
+            dispatch(fetchTasks());
             return data;
         } catch (error: unknown) {
             const appError = handleApiError(error);
@@ -100,9 +102,10 @@ export const unarchiveExistingTask = createAsyncThunk(
 
 export const deleteExistingTask = createAsyncThunk(
     'tasks/deleteExistingTask',
-    async (taskId: string, { rejectWithValue }) => {
+    async (taskId: string, { dispatch, rejectWithValue }) => {
         try {
             await taskService.deleteTask(taskId);
+            dispatch(fetchTasks());
             return taskId;
         } catch (error: unknown) {
             const appError = handleApiError(error);
@@ -167,11 +170,20 @@ const tasksSlice = createSlice({
             })
 
             // deleteExistingTask
+            .addCase(deleteExistingTask.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(deleteExistingTask.fulfilled, (state, action: PayloadAction<string>) => {
+                state.loading = false;
                 state.items = state.items.filter((t) => t.id !== action.payload);
                 if (state.activeFocusTask && state.activeFocusTask.id === action.payload) {
                     state.activeFocusTask = null;
                 }
+            })
+            .addCase(deleteExistingTask.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
             })
 
             // toggleTask
