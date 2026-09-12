@@ -86,41 +86,53 @@ const TodayScreen: React.FC = () => {
         const todayTasks: Task[] = [];
         const upcomingTasks: Task[] = [];
         const flexibleTasks: Task[] = [];
-        const archivedTasks: Task[] = [];
+        const historyTasks: Task[] = [];
 
         allTasks.forEach((task) => {
             if (task.status === 'archived') {
-                archivedTasks.push(task);
+                historyTasks.push(task);
             } else if (task.isFlexible || (!task.dueDate && !task.isFlexible)) {
                 flexibleTasks.push(task);
             } else if (task.dueDate) {
                 const normalizedDue = normalizeDateString(task.dueDate);
-                if (normalizedDue <= todayStr) {
+                if (normalizedDue === todayStr) {
                     todayTasks.push(task);
-                } else {
+                } else if (normalizedDue > todayStr) {
                     upcomingTasks.push(task);
+                } else {
+                    // normalizedDue < todayStr (yesterday or older)
+                    historyTasks.push(task);
                 }
             } else {
                 flexibleTasks.push(task);
             }
         });
 
+        // Sort history by date descending (most recent past first)
+        historyTasks.sort((a, b) => {
+            const dateA = normalizeDateString(a.dueDate) || normalizeDateString(a.createdAt);
+            const dateB = normalizeDateString(b.dueDate) || normalizeDateString(b.createdAt);
+            return dateB.localeCompare(dateA);
+        });
+
         return {
             today: todayTasks,
             upcoming: upcomingTasks,
             flexible: flexibleTasks,
-            archived: archivedTasks,
+            history: historyTasks,
+            archived: historyTasks,
         };
     }, [allTasks, todayStr]);
 
-    const currentList = categorizedTasks[selectedCategory];
+    const currentList = categorizedTasks[selectedCategory] || categorizedTasks.today;
 
     // Counts for tabs
     const counts = {
         today: categorizedTasks.today.length,
         upcoming: categorizedTasks.upcoming.length,
         flexible: categorizedTasks.flexible.length,
-        archived: categorizedTasks.archived.length,
+        history: categorizedTasks.history.length,
+        archived: categorizedTasks.history.length,
     };
 
     // Progress Calculation for Today
@@ -339,8 +351,9 @@ const TodayScreen: React.FC = () => {
                 return t('task.emptyUpcoming');
             case 'flexible':
                 return t('task.emptyFlexible');
+            case 'history':
             case 'archived':
-                return t('task.emptyArchived');
+                return t('task.emptyHistory');
         }
     };
 
@@ -374,15 +387,15 @@ const TodayScreen: React.FC = () => {
                         <View style={styles.emptyContainer}>
                             <Ionicons
                                 name={
-                                    selectedCategory === 'archived'
-                                        ? 'archive-outline'
+                                    selectedCategory === 'history' || selectedCategory === 'archived'
+                                        ? 'time-outline'
                                         : 'checkbox-outline'
                                 }
                                 size={48}
                                 color="#CBD5E1"
                             />
                             <Text style={styles.emptyText}>{getEmptyMessage()}</Text>
-                            {selectedCategory !== 'archived' && (
+                            {selectedCategory !== 'history' && selectedCategory !== 'archived' && (
                                 <TouchableOpacity
                                     style={styles.emptyAddBtn}
                                     onPress={() => setModalVisible(true)}

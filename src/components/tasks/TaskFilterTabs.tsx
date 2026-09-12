@@ -10,7 +10,8 @@ interface Props {
         today: number;
         upcoming: number;
         flexible: number;
-        archived: number;
+        history?: number;
+        archived?: number;
     };
 }
 
@@ -23,7 +24,7 @@ export const TaskFilterTabs: React.FC<Props> = ({
         { key: 'today', label: t('task.categoryToday'), count: counts.today },
         { key: 'upcoming', label: t('task.categoryUpcoming'), count: counts.upcoming },
         { key: 'flexible', label: t('task.categoryFlexible'), count: counts.flexible },
-        { key: 'archived', label: t('task.categoryArchived'), count: counts.archived },
+        { key: 'history', label: t('task.categoryHistory'), count: counts.history ?? counts.archived ?? 0 },
     ];
 
     return (

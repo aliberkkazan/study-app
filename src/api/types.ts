@@ -13,7 +13,7 @@ export interface PaginatedResponse<T> {
 
 export type TaskStatus = 'pending' | 'completed' | 'archived';
 
-export type TaskCategory = 'today' | 'upcoming' | 'flexible' | 'archived';
+export type TaskCategory = 'today' | 'upcoming' | 'flexible' | 'history' | 'archived';
 
 export interface Task {
     id: string;

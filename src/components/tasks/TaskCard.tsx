@@ -150,8 +150,8 @@ export const TaskCard: React.FC<Props> = ({
                         </TouchableOpacity>
                     )}
 
-                    {/* ONLY Mentor-Assigned Tasks: Upload Solution Image */}
-                    {isMentorAssigned && onUploadImage && (
+                    {/* ONLY Mentor-Assigned Tasks: Upload Solution Image (Temporarily hidden) */}
+                    {/* {isMentorAssigned && onUploadImage && (
                         <TouchableOpacity
                             style={styles.uploadPhotoButton}
                             onPress={() => onUploadImage(task)}
@@ -160,7 +160,7 @@ export const TaskCard: React.FC<Props> = ({
                             <Ionicons name="camera" size={16} color="#4338CA" />
                             <Text style={styles.uploadPhotoButtonText}>{t('task.uploadPhoto')}</Text>
                         </TouchableOpacity>
-                    )}
+                    )} */}
                 </View>
             )}
         </View>
