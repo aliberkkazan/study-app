@@ -234,8 +234,8 @@ export const MentorStudentsScreen: React.FC = () => {
                       ? 'Tebrikler, gayet başarılı!'
                       : 'Great job, well done!'
                     : language === 'tr'
-                    ? 'Lütfen tekrar kontrol et.'
-                    : 'Please check again and revise.'),
+                      ? 'Lütfen tekrar kontrol et.'
+                      : 'Please check again and revise.'),
               })
             ).unwrap();
             setReviewModalVisible(false);
@@ -271,20 +271,6 @@ export const MentorStudentsScreen: React.FC = () => {
             {students.length} {t('mentor.connectedStudentsCount')}
           </Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.requestsButton}
-          onPress={() => navigation.navigate('MentorRequests')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="notifications-outline" size={18} color="#2563EB" />
-          <Text style={styles.requestsButtonText}>{t('mentor.requestsBtn')}</Text>
-          {pendingRequestsCount > 0 && (
-            <View style={styles.badgeCount}>
-              <Text style={styles.badgeCountText}>{pendingRequestsCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
 
       {students.length === 0 ? (
@@ -532,8 +518,8 @@ export const MentorStudentsScreen: React.FC = () => {
                             isApproved
                               ? styles.statusApproved
                               : isRejected
-                              ? styles.statusRejected
-                              : styles.statusPending,
+                                ? styles.statusRejected
+                                : styles.statusPending,
                           ]}
                         >
                           <Text
@@ -542,15 +528,15 @@ export const MentorStudentsScreen: React.FC = () => {
                               isApproved
                                 ? styles.statusTextApproved
                                 : isRejected
-                                ? styles.statusTextRejected
-                                : styles.statusTextPending,
+                                  ? styles.statusTextRejected
+                                  : styles.statusTextPending,
                             ]}
                           >
                             {isApproved
                               ? t('mentor.approvedStatus')
                               : isRejected
-                              ? t('mentor.rejectedStatus')
-                              : t('mentor.pendingStatus')}
+                                ? t('mentor.rejectedStatus')
+                                : t('mentor.pendingStatus')}
                           </Text>
                         </View>
                         <Text style={styles.submissionDate}>
