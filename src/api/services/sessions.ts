@@ -1,4 +1,5 @@
 import client from '../client';
+import { handleApiError } from '../error';
 import { StudySession, CreateSessionPayload, SessionStats, SubjectDistribution } from '../types';
 import { getLanguage } from '../../utils/i18n';
 
@@ -39,9 +40,9 @@ export const calculateStats = (sessions: StudySession[]): SessionStats => {
             weeklyTotalMinutes += duration;
         }
 
-        if (s.questionsSolved) totalQuestions += s.questionsSolved;
-        if (s.correctCount) totalCorrect += s.correctCount;
-        if (s.incorrectCount) totalIncorrect += s.incorrectCount;
+        if (s.questionsSolved) { totalQuestions += s.questionsSolved; }
+        if (s.correctCount) { totalCorrect += s.correctCount; }
+        if (s.incorrectCount) { totalIncorrect += s.incorrectCount; }
 
         const cName = s.courseName || (getLanguage() === 'tr' ? 'Genel Çalışma' : 'General');
         courseMinutesMap[cName] = (courseMinutesMap[cName] || 0) + duration;
@@ -74,13 +75,13 @@ export const calculateStats = (sessions: StudySession[]): SessionStats => {
 };
 
 const mapBackendSessionToFrontend = (item: any): StudySession => {
-    if (!item) return {} as StudySession;
+    if (!item) { return {} as StudySession; }
     const correctCount = item.result?.correctCount ?? item.correctCount ?? 0;
     const incorrectCount = item.result?.wrongCount ?? item.incorrectCount ?? 0;
     const questionsSolved = item.result ? (correctCount + incorrectCount) : (item.questionsSolved ?? (correctCount + incorrectCount));
 
     return {
-        id: item.id || `session-${Date.now()}`,
+        id: item.id,
         taskId: item.task?.id || item.taskId,
         taskTitle: item.task?.title || item.taskTitle || (item.task?.subject ? `${item.task.subject}` : 'Çalışma Oturumu'),
         courseName: item.task?.subject || item.courseName || 'Genel',
@@ -104,8 +105,7 @@ export const getSessions = async (): Promise<StudySession[]> => {
         const rawList = Array.isArray(response.data) ? response.data : (response.data?.data || []);
         return rawList.map(mapBackendSessionToFrontend);
     } catch (error) {
-        console.warn('API /study-sessions fetch failed, returning empty session list:', error);
-        return [];
+        throw handleApiError(error);
     }
 };
 
@@ -114,8 +114,7 @@ export const getStudyProgress = async (timeframe: string = 'week'): Promise<any>
         const response = await client.get(`/study-sessions/progress?timeframe=${timeframe}`);
         return response.data;
     } catch (error) {
-        console.warn('API /study-sessions/progress fetch failed:', error);
-        return null;
+        throw handleApiError(error);
     }
 };
 
@@ -158,24 +157,6 @@ export const createStudySession = async (payload: CreateSessionPayload): Promise
             proofPhotoUri: payload.proofPhotoUri || normalized.proofPhotoUri,
         };
     } catch (error) {
-        console.warn('API /study-sessions create failed on server, creating local session for offline continuity:', error);
-        const newSession: StudySession = {
-            id: `session-${Date.now()}`,
-            taskId: payload.taskId,
-            taskTitle: payload.taskTitle,
-            courseName: payload.courseName || 'Genel',
-            topicName: payload.topicName,
-            durationMinutes: payload.durationMinutes,
-            startedAt: payload.startedAt,
-            endedAt: payload.endedAt,
-            questionsSolved: payload.questionsSolved,
-            correctCount: payload.correctCount,
-            incorrectCount: payload.incorrectCount,
-            notes: payload.notes,
-            mood: payload.mood,
-            proofPhotoUri: payload.proofPhotoUri,
-            createdAt: new Date().toISOString(),
-        };
-        return newSession;
+        throw handleApiError(error);
     }
 };

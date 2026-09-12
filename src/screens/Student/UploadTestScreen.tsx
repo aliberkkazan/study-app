@@ -1,21 +1,27 @@
-
 import React, { useState, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { Button } from '@/components';
 import { addSubmission } from '../../redux/dataSlice';
 import { fetchCurrentUser } from '../../redux/authSlice';
 import { useFocusEffect } from '@react-navigation/native';
 import { lightTheme } from '../../theme/theme';
+import {
+    SECURE_IMAGE_PICKER_OPTIONS,
+    validateImageAsset,
+    uploadImageMultipart,
+} from '../../utils/fileUpload';
 
 const UploadTestScreen = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state: any) => state.auth) || {};
     const { loading } = useSelector((state: any) => state.data);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+    const [previewUri, setPreviewUri] = useState<string | null>(null);
 
     const hasMentors = user?.mentors && user.mentors.length > 0;
+    const isStudent = user?.role === 'student';
 
     useFocusEffect(
         useCallback(() => {
@@ -26,55 +32,71 @@ const UploadTestScreen = () => {
     );
 
     const handleSelectImage = async () => {
-        const result = await launchImageLibrary({
-            mediaType: 'photo',
-            includeBase64: true,
-            quality: 0.5,
-        });
+        const result = await launchImageLibrary(SECURE_IMAGE_PICKER_OPTIONS);
 
         if (result.didCancel) {
             return;
         }
 
         if (result.errorCode) {
-            Alert.alert('Error', result.errorMessage);
+            Alert.alert('Error', result.errorMessage || 'Could not access photo library');
             return;
         }
 
         if (result.assets && result.assets.length > 0) {
             const asset = result.assets[0];
-            if (asset.base64 && asset.type) {
-                const base64Image = `data:${asset.type};base64,${asset.base64}`;
-                setSelectedImage(base64Image);
-            } else {
-                Alert.alert('Error', 'Could not process image');
+            const validation = validateImageAsset(asset);
+
+            if (!validation.isValid) {
+                Alert.alert('Invalid Image', validation.error);
+                return;
             }
+
+            setSelectedAsset(asset);
+            setPreviewUri(asset.uri || null);
         }
     };
 
     const handleUpload = async () => {
-        if (!selectedImage) {
+        if (!selectedAsset || !previewUri) {
             Alert.alert('Error', 'Please select an image first');
             return;
         }
 
-        const studentId = user?.id; // Use real user ID
-
+        const studentId = user?.id;
         if (!studentId) {
-            Alert.alert('Error', 'User validation failed');
+            Alert.alert('Authentication Error', 'User identification failed. Please log in again.');
+            return;
+        }
+
+        if (!isStudent) {
+            Alert.alert('Access Denied', 'Only registered students can upload test evidence.');
             return;
         }
 
         try {
+            let finalImageUrl = previewUri;
+
+            // Attempt multipart upload to server storage
+            try {
+                finalImageUrl = await uploadImageMultipart(selectedAsset);
+            } catch (uploadErr: any) {
+                // If multipart upload fails on local storage backend, provide safe error feedback
+                console.warn('Multipart upload failed:', uploadErr.message);
+                Alert.alert('Upload Failed', uploadErr.message || 'File upload service unavailable');
+                return;
+            }
+
             await dispatch(addSubmission({
                 studentId,
-                imageUrl: selectedImage,
+                imageUrl: finalImageUrl,
             }) as any).unwrap();
 
-            setSelectedImage(null);
+            setSelectedAsset(null);
+            setPreviewUri(null);
             Alert.alert('Success', 'Submission uploaded successfully');
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to upload');
+            Alert.alert('Error', error.message || 'Failed to submit evidence');
         }
     };
 
@@ -83,8 +105,8 @@ const UploadTestScreen = () => {
             <Text style={styles.title}>Upload Solved Test</Text>
 
             <View style={styles.uploadArea}>
-                {selectedImage ? (
-                    <Image source={{ uri: selectedImage }} style={styles.preview} />
+                {previewUri ? (
+                    <Image source={{ uri: previewUri }} style={styles.preview} />
                 ) : (
                     <View style={styles.placeholder}>
                         <Text style={styles.placeholderText}>No image selected</Text>
@@ -110,7 +132,7 @@ const UploadTestScreen = () => {
             <Button
                 mode="contained"
                 onPress={handleUpload}
-                disabled={!selectedImage || loading || !hasMentors}
+                disabled={!previewUri || loading || !hasMentors}
                 loading={loading}
                 style={styles.uploadButton}
             >
@@ -153,7 +175,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: lightTheme.colors.gray, // Fixed border color
+        borderColor: lightTheme.colors.gray,
         borderStyle: 'dashed',
     },
     placeholderText: {

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Modal, StyleSheet, View, Image, TouchableOpacity, ScrollView, Dimensions, Text } from 'react-native';
-import { Icon } from './Icon'; // Assuming Icon is in the same shared folder or accessible
 
 interface ImageViewerProps {
     visible: boolean;

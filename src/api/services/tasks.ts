@@ -35,8 +35,7 @@ export const getTasks = async (params?: { studentId?: string; status?: string; s
         const list = Array.isArray(response.data) ? response.data : (response.data?.data || []);
         return list.map(normalizeTask);
     } catch (error) {
-        console.warn('API /tasks request failed, returning empty task list:', error);
-        return [];
+        throw handleApiError(error);
     }
 };
 
@@ -58,22 +57,7 @@ export const createTask = async (payload: CreateTaskPayload): Promise<Task> => {
         const task = (response.data as { data?: any }).data || response.data;
         return normalizeTask(task);
     } catch (error) {
-        console.warn('API /tasks create failed on server, creating local task for offline continuity:', error);
-        const newTask: Task = {
-            id: `task-${Date.now()}`,
-            title: payload.title,
-            description: payload.description,
-            courseName: payload.courseName,
-            topicName: payload.topicName,
-            source: payload.source,
-            goal: payload.goal,
-            dueDate: payload.dueDate,
-            isFlexible: payload.isFlexible ?? (!payload.dueDate),
-            status: 'pending',
-            completed: false,
-            createdAt: new Date().toISOString(),
-        };
-        return newTask;
+        throw handleApiError(error);
     }
 };
 
@@ -95,28 +79,16 @@ export const updateTask = async (payload: UpdateTaskPayload): Promise<Task> => {
         const task = (response.data as { data?: any }).data || response.data;
         return normalizeTask(task);
     } catch (error) {
-        console.warn('API /tasks update failed, applying update locally:', error);
-        const updatedTask: Task = {
-            id: payload.id,
-            title: payload.title || '',
-            description: payload.description,
-            courseName: payload.courseName,
-            topicName: payload.topicName,
-            source: payload.source,
-            goal: payload.goal,
-            dueDate: payload.dueDate,
-            isFlexible: payload.isFlexible ?? (!payload.dueDate),
-            status: payload.status || 'pending',
-            completed: payload.completed ?? false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        return updatedTask;
+        throw handleApiError(error);
     }
 };
 
 export const deleteTask = async (taskId: string): Promise<void> => {
-    await client.delete(`/tasks/${taskId}`);
+    try {
+        await client.delete(`/tasks/${taskId}`);
+    } catch (error) {
+        throw handleApiError(error);
+    }
 };
 
 export const toggleTaskCompletion = async (taskId: string, completed: boolean): Promise<Task> => {
@@ -127,17 +99,7 @@ export const toggleTaskCompletion = async (taskId: string, completed: boolean): 
         const task = (response.data as { data?: any }).data || response.data;
         return normalizeTask(task);
     } catch (error) {
-        console.warn('API /tasks toggle failed, applying toggle locally:', error);
-        const toggledTask: Task = {
-            id: taskId,
-            title: '',
-            status: completed ? 'completed' : 'pending',
-            completed,
-            isFlexible: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        return toggledTask;
+        throw handleApiError(error);
     }
 };
 
@@ -147,17 +109,7 @@ export const archiveTask = async (taskId: string): Promise<Task> => {
         const task = (response.data as { data?: any }).data || response.data;
         return normalizeTask(task || { id: taskId, status: 'archived' });
     } catch (error) {
-        console.warn('API /tasks archive failed, applying archive locally:', error);
-        const archivedTask: Task = {
-            id: taskId,
-            title: '',
-            status: 'archived',
-            completed: false,
-            isFlexible: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        return archivedTask;
+        throw handleApiError(error);
     }
 };
 
@@ -169,16 +121,6 @@ export const unarchiveTask = async (taskId: string): Promise<Task> => {
         const task = (response.data as { data?: any }).data || response.data;
         return normalizeTask(task);
     } catch (error) {
-        console.warn('API /tasks unarchive failed, applying unarchive locally:', error);
-        const unarchivedTask: Task = {
-            id: taskId,
-            title: '',
-            status: 'pending',
-            completed: false,
-            isFlexible: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        return unarchivedTask;
+        throw handleApiError(error);
     }
 };

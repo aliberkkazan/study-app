@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import client, { setAuthToken } from '../api/client';
+import client, { setAuthToken, registerSessionExpiredHandler } from '../api/client';
 import { Alert } from 'react-native';
 import { handleApiError } from '../api/error';
 import { saveAuthSession, clearAuthSession, loadAuthSession } from '../utils/authStorage';
@@ -18,6 +18,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     token: string | null;
+    refreshToken: string | null;
     loading: boolean;
     error: string | null;
     isInitialized: boolean;
@@ -27,6 +28,7 @@ const initialState: AuthState = {
     user: null,
     isAuthenticated: false,
     token: null,
+    refreshToken: null,
     loading: false,
     error: null,
     isInitialized: false,
@@ -39,10 +41,14 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWi
         if (session && session.token && session.user) {
             setAuthToken(session.token);
             const userWithId = { ...session.user, id: session.user.id || session.user.sub };
-            return { token: session.token, user: userWithId };
+            return {
+                token: session.token,
+                refreshToken: session.refreshToken || null,
+                user: userWithId,
+            };
         }
         return null;
-    } catch (error) {
+    } catch {
         return rejectWithValue('Failed to load session');
     }
 });
@@ -52,12 +58,11 @@ export const loginUser = createAsyncThunk(
     async (credentials: Record<string, string>, { rejectWithValue }) => {
         try {
             const response = await client.post('/auth/login', credentials);
-            const { access_token, user } = response.data;
+            const { access_token, refresh_token, user } = response.data;
             setAuthToken(access_token);
-            // Ensure ID is present (backend returns sub)
             const userWithId = { ...user, id: user.sub || user.id };
-            saveAuthSession(access_token, userWithId);
-            return { token: access_token, user: userWithId };
+            await saveAuthSession(access_token, userWithId, refresh_token);
+            return { token: access_token, refreshToken: refresh_token || null, user: userWithId };
         } catch (error: unknown) {
             const appError = handleApiError(error);
             Alert.alert('Login Error', appError.message);
@@ -71,11 +76,11 @@ export const registerUser = createAsyncThunk(
     async (userData: Record<string, unknown>, { rejectWithValue }) => {
         try {
             const response = await client.post('/auth/register', userData);
-            const { access_token, user } = response.data;
+            const { access_token, refresh_token, user } = response.data;
             setAuthToken(access_token);
             const userWithId = { ...user, id: user.sub || user.id };
-            saveAuthSession(access_token, userWithId);
-            return { token: access_token, user: userWithId };
+            await saveAuthSession(access_token, userWithId, refresh_token);
+            return { token: access_token, refreshToken: refresh_token || null, user: userWithId };
         } catch (error: unknown) {
             const appError = handleApiError(error);
             Alert.alert('Registration Error', appError.message);
@@ -88,13 +93,19 @@ export const fetchCurrentUser = createAsyncThunk(
     'auth/fetchCurrentUser',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await client.get('/users/profile');
+            // Align with backend contract: /auth/me is the canonical endpoint
+            let response;
+            try {
+                response = await client.get('/auth/me');
+            } catch {
+                response = await client.get('/users/profile');
+            }
+
             if (response.data) {
                 const userWithId = { ...response.data, id: response.data.id || response.data.sub };
-                // Update storage
                 const session = await loadAuthSession();
                 if (session && session.token) {
-                    saveAuthSession(session.token, userWithId);
+                    await saveAuthSession(session.token, userWithId, session.refreshToken);
                 }
                 return userWithId;
             }
@@ -114,7 +125,7 @@ export const refreshMentorCode = createAsyncThunk(
             if (response.data) {
                 const session = await loadAuthSession();
                 if (session && session.token) {
-                    saveAuthSession(session.token, response.data);
+                    await saveAuthSession(session.token, response.data, session.refreshToken);
                 }
                 return response.data;
             }
@@ -140,7 +151,7 @@ export const updateUserRole = createAsyncThunk(
             const updatedUser = response.data || { ...state.auth.user, role };
             const session = await loadAuthSession();
             if (session && session.token) {
-                await saveAuthSession(session.token, updatedUser);
+                await saveAuthSession(session.token, updatedUser, session.refreshToken);
             }
             return updatedUser;
         } catch (error: unknown) {
@@ -159,7 +170,7 @@ export const switchUserRole = createAsyncThunk(
             const userWithId = { ...updatedUser, id: updatedUser.id || updatedUser.sub };
             const session = await loadAuthSession();
             if (session && session.token) {
-                await saveAuthSession(session.token, userWithId);
+                await saveAuthSession(session.token, userWithId, session.refreshToken);
             }
             return userWithId;
         } catch (error: unknown) {
@@ -168,7 +179,6 @@ export const switchUserRole = createAsyncThunk(
         }
     }
 );
-
 
 export const deleteAccount = createAsyncThunk(
     'auth/deleteAccount',
@@ -193,15 +203,14 @@ export const deleteAccount = createAsyncThunk(
 
 export const logout = createAsyncThunk(
     'auth/logout',
-    async (_, { rejectWithValue }) => {
+    async () => {
         try {
             await clearAuthSession();
             setAuthToken(null);
-            return;
-        } catch (error) {
-            console.error('Logout failed', error);
-            return;
+        } catch {
+            console.warn('Error during logout session cleanup');
         }
+        return;
     }
 );
 
@@ -233,11 +242,13 @@ const authSlice = createSlice({
             state.user = null;
             state.isAuthenticated = false;
             state.token = null;
+            state.refreshToken = null;
         });
         builder.addCase(logout.rejected, (state) => {
             state.user = null;
             state.isAuthenticated = false;
             state.token = null;
+            state.refreshToken = null;
         });
 
         // Delete Account
@@ -245,18 +256,21 @@ const authSlice = createSlice({
             state.user = null;
             state.isAuthenticated = false;
             state.token = null;
+            state.refreshToken = null;
         });
-        
+
         // Check Auth
         builder.addCase(checkAuth.fulfilled, (state, action) => {
             if (action.payload && action.payload.token) {
                 state.isAuthenticated = true;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
+                state.refreshToken = action.payload.refreshToken || null;
             } else {
                 state.isAuthenticated = false;
                 state.user = null;
                 state.token = null;
+                state.refreshToken = null;
             }
             state.isInitialized = true;
         });
@@ -274,6 +288,7 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
             state.user = action.payload.user;
             state.token = action.payload.token;
+            state.refreshToken = action.payload.refreshToken;
         });
         builder.addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
@@ -290,6 +305,7 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
             state.user = action.payload.user;
             state.token = action.payload.token;
+            state.refreshToken = action.payload.refreshToken;
         });
         builder.addCase(registerUser.rejected, (state, action) => {
             state.loading = false;
@@ -309,9 +325,18 @@ const authSlice = createSlice({
                 state.user = action.payload;
             }
         });
-    }
+    },
 });
 
 export const { setUserRole } = authSlice.actions;
+
+/**
+ * Initializes listener for centralized 401 session expiration
+ */
+export const initAuthSessionHandler = (dispatch: any) => {
+    registerSessionExpiredHandler(() => {
+        dispatch(logout());
+    });
+};
 
 export default authSlice.reducer;

@@ -527,7 +527,9 @@ export const AccountabilityModal: React.FC<Props> = ({ visible, onClose }) => {
                 </View>
                 <Switch
                   value={shareSettings.shareStudyTime}
-                  onValueChange={(val) => dispatch(updateShareSettings({ shareStudyTime: val }))}
+                  onValueChange={(val) => {
+                    dispatch(updateShareSettings({ shareStudyTime: val }));
+                  }}
                   trackColor={{ true: '#007AFF', false: '#ccc' }}
                 />
               </View>
@@ -539,7 +541,9 @@ export const AccountabilityModal: React.FC<Props> = ({ visible, onClose }) => {
                 </View>
                 <Switch
                   value={shareSettings.shareCompletedTasks}
-                  onValueChange={(val) => dispatch(updateShareSettings({ shareCompletedTasks: val }))}
+                  onValueChange={(val) => {
+                    dispatch(updateShareSettings({ shareCompletedTasks: val }));
+                  }}
                   trackColor={{ true: '#007AFF', false: '#ccc' }}
                 />
               </View>
@@ -551,7 +555,9 @@ export const AccountabilityModal: React.FC<Props> = ({ visible, onClose }) => {
                 </View>
                 <Switch
                   value={shareSettings.shareScores}
-                  onValueChange={(val) => dispatch(updateShareSettings({ shareScores: val }))}
+                  onValueChange={(val) => {
+                    dispatch(updateShareSettings({ shareScores: val }));
+                  }}
                   trackColor={{ true: '#007AFF', false: '#ccc' }}
                 />
               </View>

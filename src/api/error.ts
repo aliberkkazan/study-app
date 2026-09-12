@@ -23,9 +23,12 @@ export const handleApiError = (error: unknown): AppError => {
         const data = axiosError.response?.data;
 
         const requestUrl = axiosError.config?.url || '';
-        const backendMessage = Array.isArray(data?.message)
-            ? (data.message as string[]).join(', ')
-            : data?.message;
+        const msgProp = data?.message;
+        const backendMessage = Array.isArray(msgProp)
+            ? (msgProp as string[]).join(', ')
+            : typeof msgProp === 'string'
+            ? msgProp
+            : undefined;
 
         let message = backendMessage || t('common.error');
 
@@ -59,7 +62,7 @@ export const handleApiError = (error: unknown): AppError => {
                     break;
                 default:
                     if (status >= 500) {
-                        message = backendMessage || 'Server error. Please try again later.';
+                        message = 'Server error. Please try again later.';
                     }
                     break;
             }

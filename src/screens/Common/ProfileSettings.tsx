@@ -21,21 +21,31 @@ const ProfileSettings = () => {
                 {
                     text: t('profile.delete'),
                     style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            const resultAction = await dispatch(deleteAccount());
-                            if (deleteAccount.fulfilled.match(resultAction)) {
-                                console.log('Account deleted successfully');
-                            } else {
-                                if (resultAction.payload) {
-                                    console.log('Delete failed:', resultAction.payload);
-                                } else {
-                                    console.log('Delete failed with error:', resultAction.error);
-                                }
-                            }
-                        } catch (err) {
-                            console.log('Dispatch error:', err);
-                        }
+                    onPress: () => {
+                        // Second confirmation step for destructive action
+                        Alert.alert(
+                            t('profile.deleteAccount'),
+                            'This action is permanent and cannot be undone. All your study data, sessions, and connections will be wiped.',
+                            [
+                                { text: t('common.cancel'), style: 'cancel' },
+                                {
+                                    text: t('profile.delete'),
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            const resultAction = await dispatch(deleteAccount());
+                                            if (deleteAccount.fulfilled.match(resultAction)) {
+                                                console.log('Account deleted successfully');
+                                            } else {
+                                                console.warn('Account deletion rejected by server');
+                                            }
+                                        } catch {
+                                            console.warn('Account deletion request failed');
+                                        }
+                                    },
+                                },
+                            ]
+                        );
                     },
                 },
             ],

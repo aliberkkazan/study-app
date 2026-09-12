@@ -16,7 +16,7 @@ function Caption(props: Props) {
         <Typography
             {...props}
             opacity={0.54}
-            family="regular"
+            family="normal"
             style={[styles.text, props.style]}
         />
     );

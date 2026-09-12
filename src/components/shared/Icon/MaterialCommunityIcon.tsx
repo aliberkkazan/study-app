@@ -55,7 +55,7 @@ try {
     };
 }
 
-export const accessibilityProps =
+export const accessibilityProps: any =
     Platform.OS === 'web'
         ? {
             role: 'img',

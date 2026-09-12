@@ -206,33 +206,49 @@ export const MentorStudentsScreen: React.FC = () => {
   };
 
   // Handle Review Submission
-  const handleReviewAction = async (approved: boolean) => {
+  const handleReviewAction = (approved: boolean) => {
     if (!selectedSubmission) return;
 
-    try {
-      await dispatch(
-        reviewSubmission({
-          id: selectedSubmission.id,
-          status: approved ? 'approved' : 'rejected',
-          feedback:
-            feedbackText.trim() ||
-            (approved
-              ? language === 'tr'
-                ? 'Tebrikler, gayet başarılı!'
-                : 'Great job, well done!'
-              : language === 'tr'
-              ? 'Lütfen tekrar kontrol et.'
-              : 'Please check again and revise.'),
-        })
-      ).unwrap();
-      setReviewModalVisible(false);
-      setSelectedSubmission(null);
-      setFeedbackText('');
-      Alert.alert(t('common.saved'), approved ? t('mentor.submissionApproved') : t('mentor.feedbackSent'));
-      dispatch(fetchSubmissions());
-    } catch (err: any) {
-      Alert.alert(t('common.error'), err || t('common.error'));
-    }
+    const confirmTitle = approved
+      ? (language === 'tr' ? 'Kanıtı Onayla' : 'Approve Submission')
+      : (language === 'tr' ? 'Kanıtı Reddet' : 'Reject Submission');
+    const confirmMessage = approved
+      ? (language === 'tr' ? 'Bu öğrenci çalışmasını onaylamak istediğinize emin misiniz?' : 'Are you sure you want to approve this student submission?')
+      : (language === 'tr' ? 'Bu öğrenci çalışmasını reddetmek istediğinize emin misiniz?' : 'Are you sure you want to reject this student submission?');
+
+    Alert.alert(confirmTitle, confirmMessage, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: approved ? (language === 'tr' ? 'Onayla' : 'Approve') : (language === 'tr' ? 'Reddet' : 'Reject'),
+        style: approved ? 'default' : 'destructive',
+        onPress: async () => {
+          try {
+            await dispatch(
+              reviewSubmission({
+                id: selectedSubmission.id,
+                status: approved ? 'approved' : 'rejected',
+                feedback:
+                  feedbackText.trim() ||
+                  (approved
+                    ? language === 'tr'
+                      ? 'Tebrikler, gayet başarılı!'
+                      : 'Great job, well done!'
+                    : language === 'tr'
+                    ? 'Lütfen tekrar kontrol et.'
+                    : 'Please check again and revise.'),
+              })
+            ).unwrap();
+            setReviewModalVisible(false);
+            setSelectedSubmission(null);
+            setFeedbackText('');
+            Alert.alert(t('common.saved'), approved ? t('mentor.submissionApproved') : t('mentor.feedbackSent'));
+            dispatch(fetchSubmissions());
+          } catch (err: any) {
+            Alert.alert(t('common.error'), err || t('common.error'));
+          }
+        },
+      },
+    ]);
   };
 
   const getInitials = (name?: string) => {
@@ -379,7 +395,7 @@ export const MentorStudentsScreen: React.FC = () => {
                 color={activeTab === 'tasks' ? '#2563EB' : '#64748B'}
               />
               <Text style={[styles.sectionTabText, activeTab === 'tasks' && styles.sectionTabTextActive]}>
-                {t('roadmap.tasks')} ({studentTasks.length})
+                {t('mentor.tasksTab')} ({studentTasks.length})
               </Text>
             </TouchableOpacity>
 
