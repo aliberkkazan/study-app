@@ -14,7 +14,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Task, CreateSessionPayload, SessionMood } from '../../api/types';
-import { t } from '../../utils/i18n';
+import { t, useAppLanguage, translateCourseName } from '../../utils/i18n';
 
 interface Props {
     visible: boolean;
@@ -42,6 +42,7 @@ export const SessionResultModal: React.FC<Props> = ({
     onClose,
     onSubmit,
 }) => {
+    const { language } = useAppLanguage();
     const [questionsSolved, setQuestionsSolved] = useState('');
     const [correctCount, setCorrectCount] = useState('');
     const [incorrectCount, setIncorrectCount] = useState('');
@@ -175,7 +176,7 @@ export const SessionResultModal: React.FC<Props> = ({
                                 <View style={styles.taskCardHeader}>
                                     <View style={styles.taskCardCourseBadge}>
                                         <Text style={styles.taskCardCourseText}>
-                                            {task.courseName || t('focus.activeTask')}
+                                            {translateCourseName(task.courseName, language) || t('focus.activeTask')}
                                         </Text>
                                     </View>
                                     <Text style={styles.taskCardTitle} numberOfLines={1}>

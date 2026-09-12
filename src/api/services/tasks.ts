@@ -11,7 +11,7 @@ export const normalizeTask = (raw: any): Task => {
         title: raw.title || '',
         description: raw.description,
         courseId: raw.courseId,
-        courseName: raw.courseName || raw.subject || (assigner ? 'Mentor Görevi' : undefined),
+        courseName: raw.courseName || raw.subject || (assigner ? 'Mentor Task' : undefined),
         topicId: raw.topicId,
         topicName: raw.topicName || raw.topic || raw.description || undefined,
         source: raw.source,

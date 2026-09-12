@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Task } from '../../api/types';
-import { t, useAppLanguage } from '../../utils/i18n';
+import { t, useAppLanguage, translateCourseName } from '../../utils/i18n';
 
 interface Props {
     visible: boolean;
@@ -145,7 +145,7 @@ export const TaskCompletionModal: React.FC<Props> = ({
                             </Text>
                             {task.courseName && (
                                 <View style={styles.badge}>
-                                    <Text style={styles.badgeText}>{task.courseName}</Text>
+                                    <Text style={styles.badgeText}>{translateCourseName(task.courseName, language)}</Text>
                                 </View>
                             )}
                         </View>

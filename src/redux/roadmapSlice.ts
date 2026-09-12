@@ -7,7 +7,7 @@ import {
   SATTrialResult,
   generateInitialRoadmapTasks,
 } from '../data/examPacks';
-import { Language, setLanguage } from '../utils/i18n';
+import { Language, setLanguage, detectDeviceLanguage } from '../utils/i18n';
 import { AccessScope, GrantPermissions } from '../api/types';
 import {
   createInvite,
@@ -282,7 +282,7 @@ export const fetchStudyProgress = createAsyncThunk(
 );
 
 const initialDetectedCountry = detectDeviceCountry();
-const initialLanguage: Language = initialDetectedCountry === 'TR' ? 'tr' : 'en';
+const initialLanguage: Language = detectDeviceLanguage();
 setLanguage(initialLanguage);
 
 const initialState: RoadmapState = {

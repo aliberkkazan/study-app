@@ -16,6 +16,7 @@ interface User {
 
 interface AuthState {
     user: User | null;
+    adminOriginalUser: User | null;
     isAuthenticated: boolean;
     token: string | null;
     refreshToken: string | null;
@@ -26,6 +27,7 @@ interface AuthState {
 
 const initialState: AuthState = {
     user: null,
+    adminOriginalUser: null,
     isAuthenticated: false,
     token: null,
     refreshToken: null,
@@ -223,6 +225,24 @@ const authSlice = createSlice({
                 state.user.role = action.payload;
             }
         },
+        impersonateUser: (state, action: PayloadAction<User>) => {
+            // Guard: Only admins or an active admin impersonation session can switch accounts
+            const isAdmin = state.user?.role === 'admin' || state.adminOriginalUser?.role === 'admin';
+            if (!isAdmin) {
+                console.warn('Unauthorized impersonation attempt blocked: caller is not an admin');
+                return;
+            }
+            if (!state.adminOriginalUser && state.user?.role === 'admin') {
+                state.adminOriginalUser = state.user;
+            }
+            state.user = action.payload;
+        },
+        stopImpersonating: (state) => {
+            if (state.adminOriginalUser) {
+                state.user = state.adminOriginalUser;
+                state.adminOriginalUser = null;
+            }
+        },
     },
     extraReducers: (builder) => {
         // Update User Role
@@ -240,12 +260,14 @@ const authSlice = createSlice({
         // Logout
         builder.addCase(logout.fulfilled, (state) => {
             state.user = null;
+            state.adminOriginalUser = null;
             state.isAuthenticated = false;
             state.token = null;
             state.refreshToken = null;
         });
         builder.addCase(logout.rejected, (state) => {
             state.user = null;
+            state.adminOriginalUser = null;
             state.isAuthenticated = false;
             state.token = null;
             state.refreshToken = null;
@@ -254,6 +276,7 @@ const authSlice = createSlice({
         // Delete Account
         builder.addCase(deleteAccount.fulfilled, (state) => {
             state.user = null;
+            state.adminOriginalUser = null;
             state.isAuthenticated = false;
             state.token = null;
             state.refreshToken = null;
@@ -328,7 +351,7 @@ const authSlice = createSlice({
     },
 });
 
-export const { setUserRole } = authSlice.actions;
+export const { setUserRole, impersonateUser, stopImpersonating } = authSlice.actions;
 
 /**
  * Initializes listener for centralized 401 session expiration

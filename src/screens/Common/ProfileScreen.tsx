@@ -36,7 +36,7 @@ import { useAppLanguage } from '../../utils/i18n';
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
-  const { user: currentUser, isAuthenticated, loading: authLoading } = useSelector(
+  const { user: currentUser, adminOriginalUser, isAuthenticated, loading: authLoading } = useSelector(
     (state: RootState) => state.auth
   );
   const { loading: dataLoading, students, connectionRequests } = useSelector(
@@ -406,6 +406,39 @@ const ProfileScreen = () => {
                 </TouchableOpacity>
               </View>
             )}
+          </View>
+        )}
+
+        {/* ADMIN ACCESS CARD */}
+        {!isViewingStudent && (currentUser?.role === 'admin' || !!adminOriginalUser) && (
+          <View style={styles.card}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <View style={[styles.statIconWrap, { backgroundColor: '#FEF3C7', marginRight: 12 }]}>
+                <Ionicons name="shield-checkmark" size={20} color="#D97706" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>
+                  {t('admin.panelTitle')}
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  {adminOriginalUser
+                    ? t('admin.actingAs', { name: currentUser?.name || '', role: roleLabel })
+                    : t('admin.accountSelectionSubtitle')}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.primaryActionButton}
+              onPress={() => navigation.navigate('AdminAccountSelection')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="swap-horizontal" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.primaryActionButtonText}>
+                {adminOriginalUser ? t('admin.changeAccount') : t('admin.accountSelectionTitle')}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+            </TouchableOpacity>
           </View>
         )}
 

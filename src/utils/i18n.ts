@@ -1,6 +1,6 @@
-// src/utils/i18n.ts
 import { useSelector } from 'react-redux';
 import { useCallback } from 'react';
+import { Platform, NativeModules } from 'react-native';
 
 export type Language = 'en' | 'tr';
 
@@ -65,7 +65,8 @@ const translations: Record<Language, Record<string, string>> = {
     'task.pleaseEnterTitle': 'Please enter a task title',
     'task.failedCreate': 'Failed to create task',
     'task.imageProcessError': 'Image could not be processed.',
-    'task.sessionNotFound': 'User session not found.',
+    'task.mentorTask': 'Mentor Task',
+    'task.sessionNotFound': 'Session not found.',
     'task.unknownUser': 'User',
     'task.studySession': 'Study Session',
     'task.generalStudy': 'General Study',
@@ -249,6 +250,24 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.roleStudent': 'Student',
     'profile.roleMentor': 'Mentor / Educator',
     'profile.roleAdmin': 'Admin',
+    'admin.badge': 'ADMINISTRATOR',
+    'admin.panelTitle': 'Admin Panel',
+    'admin.accountSelectionTitle': 'Select Account',
+    'admin.accountSelectionSubtitle': 'View and manage any student or mentor account',
+    'admin.searchPlaceholder': 'Search by name, email or code...',
+    'admin.filterAll': 'All',
+    'admin.filterStudents': 'Students',
+    'admin.filterMentors': 'Mentors',
+    'admin.totalAccounts': 'Total Accounts',
+    'admin.switchInto': 'Switch to Account',
+    'admin.activeAccount': 'Active Session',
+    'admin.impersonationActive': 'Admin Mode',
+    'admin.actingAs': 'Currently viewing as {name} ({role})',
+    'admin.changeAccount': 'Change Account',
+    'admin.returnToAdmin': 'Exit Admin Mode',
+    'admin.noUsersFound': 'No accounts found matching your query.',
+    'admin.unauthorized': 'Access denied: Admin privileges required.',
+    'admin.viewProfile': 'Admin Profile',
     'profile.toStudent': 'To Student',
     'profile.toMentor': 'To Mentor',
     'profile.locked': 'Locked',
@@ -470,6 +489,7 @@ const translations: Record<Language, Record<string, string>> = {
     'task.pleaseEnterTitle': 'Lütfen görev başlığı girin',
     'task.failedCreate': 'Görev oluşturulamadı',
     'task.imageProcessError': 'Görsel işlenemedi.',
+    'task.mentorTask': 'Mentor Görevi',
     'task.sessionNotFound': 'Kullanıcı oturumu bulunamadı.',
     'task.unknownUser': 'Kullanıcı',
     'task.studySession': 'Çalışma Oturumu',
@@ -654,6 +674,24 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.roleStudent': 'Öğrenci',
     'profile.roleMentor': 'Mentor / Eğitmen',
     'profile.roleAdmin': 'Yönetici',
+    'admin.badge': 'YÖNETİCİ',
+    'admin.panelTitle': 'Yönetici Paneli',
+    'admin.accountSelectionTitle': 'Hesap Seçimi',
+    'admin.accountSelectionSubtitle': 'Tüm öğrenci ve mentor hesaplarını görüntüleyin ve yönetin',
+    'admin.searchPlaceholder': 'İsim, e-posta veya kod ile ara...',
+    'admin.filterAll': 'Tümü',
+    'admin.filterStudents': 'Öğrenciler',
+    'admin.filterMentors': 'Mentorler',
+    'admin.totalAccounts': 'Toplam Hesap',
+    'admin.switchInto': 'Hesaba Geçiş Yap',
+    'admin.activeAccount': 'Aktif Oturum',
+    'admin.impersonationActive': 'Yönetici Modu',
+    'admin.actingAs': 'Şu an {name} ({role}) hesabı görüntüleniyor',
+    'admin.changeAccount': 'Hesap Değiştir',
+    'admin.returnToAdmin': 'Yöneticiye Dön',
+    'admin.noUsersFound': 'Aramanızla eşleşen hesap bulunamadı.',
+    'admin.unauthorized': 'Erişim engellendi: Yönetici yetkisi gereklidir.',
+    'admin.viewProfile': 'Yönetici Profili',
     'profile.toStudent': 'Öğrenciye Geç',
     'profile.toMentor': 'Mentora Geç',
     'profile.locked': 'Kilitli',
@@ -817,18 +855,57 @@ const translations: Record<Language, Record<string, string>> = {
   },
 };
 
-let currentLanguage: Language = 'tr';
+export const DEFAULT_LANGUAGE: Language = 'en';
+
+export const detectDeviceLanguage = (): Language => {
+  try {
+    let locale = '';
+
+    if (Platform.OS === 'ios') {
+      const settings = NativeModules.SettingsManager?.settings;
+      locale =
+        (Array.isArray(settings?.AppleLanguages) && settings.AppleLanguages[0]) ||
+        settings?.AppleLocale ||
+        '';
+    } else if (Platform.OS === 'android') {
+      locale = NativeModules.I18nManager?.localeIdentifier || '';
+    }
+
+    if (!locale && typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      locale = Intl.DateTimeFormat().resolvedOptions().locale || '';
+    }
+
+    if (!locale && typeof navigator !== 'undefined') {
+      locale = navigator.language || '';
+    }
+
+    if (locale) {
+      const langCode = locale.toLowerCase().split(/[-_]/)[0];
+      if (langCode === 'tr') {
+        return 'tr';
+      }
+    }
+
+    return DEFAULT_LANGUAGE;
+  } catch (error) {
+    console.log('Error detecting device language, defaulting to en', error);
+    return DEFAULT_LANGUAGE;
+  }
+};
+
+let currentLanguage: Language = detectDeviceLanguage();
 
 export const setLanguage = (lang: Language) => {
   currentLanguage = lang;
 };
 
 export const getLanguage = (): Language => {
-  return currentLanguage;
+  return currentLanguage || DEFAULT_LANGUAGE;
 };
 
 export const t = (key: string, params?: Record<string, string | number>): string => {
-  let str = translations[currentLanguage]?.[key] || translations['en'][key] || key;
+  const activeLang = currentLanguage || DEFAULT_LANGUAGE;
+  let str = translations[activeLang]?.[key] || translations[DEFAULT_LANGUAGE]?.[key] || key;
   if (params) {
     Object.keys(params).forEach((paramKey) => {
       str = str.replace(new RegExp(`{${paramKey}}`, 'g'), String(params[paramKey]));
@@ -838,11 +915,11 @@ export const t = (key: string, params?: Record<string, string | number>): string
 };
 
 export const useAppLanguage = (): { language: Language; t: (key: string, params?: Record<string, string | number>) => string } => {
-  const language = useSelector((state: any) => state.roadmap?.language || currentLanguage) as Language;
+  const language = useSelector((state: any) => state.roadmap?.language || currentLanguage || DEFAULT_LANGUAGE) as Language;
   
   const tReactive = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      let str = translations[language]?.[key] || translations['en'][key] || key;
+      let str = translations[language]?.[key] || translations[DEFAULT_LANGUAGE]?.[key] || key;
       if (params) {
         Object.keys(params).forEach((paramKey) => {
           str = str.replace(new RegExp(`{${paramKey}}`, 'g'), String(params[paramKey]));
@@ -881,22 +958,37 @@ const COURSE_TRANSLATIONS: Record<string, { en: string; tr: string }> = {
   Tarih: { en: 'History', tr: 'Tarih' },
   Coğrafya: { en: 'Geography', tr: 'Coğrafya' },
   Felsefe: { en: 'Philosophy', tr: 'Felsefe' },
+  'Mentor Task': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'Mentor task': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'mentor task': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'Mentor Görevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'Mentor görevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'mentor görevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'Mentor Gorevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'Mentor gorevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
+  'mentor gorevi': { en: 'Mentor Task', tr: 'Mentor Görevi' },
 };
 
 export const translateCourseName = (courseName?: string | null, lang?: Language): string => {
-  const activeLang = lang || currentLanguage;
+  const activeLang = lang || currentLanguage || DEFAULT_LANGUAGE;
   if (!courseName) {
     return activeLang === 'tr' ? 'Genel' : 'General';
   }
-  const match = COURSE_TRANSLATIONS[courseName.trim()];
+  const trimmed = courseName.trim();
+  const match = COURSE_TRANSLATIONS[trimmed];
   if (match) {
-    return match[activeLang] || courseName;
+    return match[activeLang] || trimmed;
   }
-  return courseName;
+  const lowerTrimmed = trimmed.toLowerCase();
+  const foundKey = Object.keys(COURSE_TRANSLATIONS).find(k => k.toLowerCase() === lowerTrimmed);
+  if (foundKey) {
+    return COURSE_TRANSLATIONS[foundKey][activeLang] || trimmed;
+  }
+  return trimmed;
 };
 
 export const translateSessionTitle = (title?: string | null, lang?: Language): string => {
-  const activeLang = lang || currentLanguage;
+  const activeLang = lang || currentLanguage || DEFAULT_LANGUAGE;
   if (!title) {
     return activeLang === 'tr' ? 'Çalışma Oturumu' : 'Study Session';
   }

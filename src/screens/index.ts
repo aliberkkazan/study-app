@@ -23,3 +23,6 @@ export { default as ProgressScreen } from './Core/ProgressScreen';
 // Roadmap & Exam Selection
 export { ExamSelectionScreen } from './Roadmap/ExamSelectionScreen';
 export { RoadmapScreen } from './Roadmap/RoadmapScreen';
+
+// Admin
+export { default as AdminAccountSelectionScreen } from './Admin/AdminAccountSelectionScreen';

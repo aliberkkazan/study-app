@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Task } from '../../api/types';
-import { t } from '../../utils/i18n';
+import { useAppLanguage, translateCourseName } from '../../utils/i18n';
 import { formatDisplayDate } from '../../utils/date';
 
 interface Props {
@@ -22,6 +22,7 @@ export const TaskCard: React.FC<Props> = ({
     onUnarchive,
     onUploadImage,
 }) => {
+    const { language, t } = useAppLanguage();
     const isCompleted = task.completed || task.status === 'completed';
     const isArchived = task.status === 'archived';
     const isMentorAssigned = !!task.assignerId;
@@ -60,7 +61,9 @@ export const TaskCard: React.FC<Props> = ({
                     <View style={styles.tagsRow}>
                         {task.courseName ? (
                             <View style={styles.courseBadge}>
-                                <Text style={styles.courseText}>{task.courseName}</Text>
+                                <Text style={styles.courseText}>
+                                    {translateCourseName(task.courseName, language)}
+                                </Text>
                             </View>
                         ) : null}
 

@@ -83,8 +83,8 @@ const mapBackendSessionToFrontend = (item: any): StudySession => {
     return {
         id: item.id,
         taskId: item.task?.id || item.taskId,
-        taskTitle: item.task?.title || item.taskTitle || (item.task?.subject ? `${item.task.subject}` : 'Çalışma Oturumu'),
-        courseName: item.task?.subject || item.courseName || 'Genel',
+        taskTitle: item.task?.title || item.taskTitle || (item.task?.subject ? `${item.task.subject}` : (getLanguage() === 'tr' ? 'Çalışma Oturumu' : 'Study Session')),
+        courseName: item.task?.subject || item.courseName || (getLanguage() === 'tr' ? 'Genel' : 'General'),
         topicName: item.task?.topic || item.topicName,
         durationMinutes: item.actualDuration ?? item.targetDuration ?? item.durationMinutes ?? 0,
         startedAt: item.startTime ? new Date(item.startTime).toISOString() : (item.startedAt || new Date().toISOString()),
@@ -144,7 +144,7 @@ export const createStudySession = async (payload: CreateSessionPayload): Promise
 
         return {
             ...normalized,
-            courseName: normalized.courseName || payload.courseName || 'Genel',
+            courseName: normalized.courseName || payload.courseName || (getLanguage() === 'tr' ? 'Genel' : 'General'),
             topicName: normalized.topicName || payload.topicName,
             taskTitle: normalized.taskTitle || payload.taskTitle,
             durationMinutes: normalized.durationMinutes || payload.durationMinutes,

@@ -8,7 +8,6 @@ import {
     ReviewTestScreen,
     StudentSubmissionsScreen,
     UploadTestScreen,
-    MentorStudentListScreen,
     MentorProgramListScreen,
     RoleSelectionScreen,
     ProfileScreen,
@@ -19,6 +18,7 @@ import {
     RoadmapScreen,
     MentorStudentsScreen,
     OnboardingScreen,
+    AdminAccountSelectionScreen,
 } from '@screens';
 import { ProfileSettingsHeader } from '../components';
 import React from 'react';
@@ -91,6 +91,5 @@ export const COMMON_STACK_ROUTES: RouteConfig[] = [
 ];
 
 export const ADMIN_STACK_ROUTES: RouteConfig[] = [
-    { name: 'RoleSelection', component: RoleSelectionScreen },
-    // StudentHome and MentorHome are handled specially in RootNavigator due to their navigator components
+    { name: 'AdminAccountSelection', component: AdminAccountSelectionScreen, options: { headerShown: false } },
 ];
