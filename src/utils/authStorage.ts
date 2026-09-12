@@ -1,65 +1,80 @@
 import RNFS from 'react-native-fs';
+import {
+    saveSecureSession,
+    loadSecureSession,
+    clearSecureSession,
+    getSecureAccessToken,
+    getSecureRefreshToken,
+    StoredSession,
+} from './secureStorage';
 
-const AUTH_FILE_PATH = RNFS.DocumentDirectoryPath + '/auth_session.json';
-const REMEMBER_ME_PATH = RNFS.DocumentDirectoryPath + '/remember_me.json';
+const REMEMBER_ME_PATH = `${RNFS.DocumentDirectoryPath}/remember_me.json`;
 
-export const saveAuthSession = async (token: string, user: any) => {
-    try {
-        await RNFS.writeFile(AUTH_FILE_PATH, JSON.stringify({ token, user }), 'utf8');
-    } catch (error) {
-        console.error('Failed to save auth session', error);
-    }
+/**
+ * Saves auth token and user to secure storage (Keychain/Keystore)
+ */
+export const saveAuthSession = async (
+    token: string,
+    user: any,
+    refreshToken?: string | null
+): Promise<void> => {
+    await saveSecureSession(token, user, refreshToken);
 };
 
-export const loadAuthSession = async () => {
-    try {
-        if (await RNFS.exists(AUTH_FILE_PATH)) {
-            const content = await RNFS.readFile(AUTH_FILE_PATH, 'utf8');
-            return JSON.parse(content);
-        }
-    } catch (error) {
-        console.error('Failed to load auth session', error);
+/**
+ * Loads session from secure storage (Keychain/Keystore)
+ */
+export const loadAuthSession = async (): Promise<{ token: string; user: any; refreshToken?: string | null } | null> => {
+    const session: StoredSession | null = await loadSecureSession();
+    if (session && session.tokens?.accessToken) {
+        return {
+            token: session.tokens.accessToken,
+            refreshToken: session.tokens.refreshToken,
+            user: session.user,
+        };
     }
     return null;
 };
 
-export const clearAuthSession = async () => {
+/**
+ * Clears all auth sessions from secure storage
+ */
+export const clearAuthSession = async (): Promise<void> => {
+    await clearSecureSession();
+};
+
+export { getSecureAccessToken, getSecureRefreshToken };
+
+/**
+ * Remembers email address only (no tokens, no passwords)
+ */
+export const saveRememberedEmail = async (email: string): Promise<void> => {
     try {
-        if (await RNFS.exists(AUTH_FILE_PATH)) {
-            await RNFS.unlink(AUTH_FILE_PATH);
-        }
-    } catch (error) {
-        console.error('Failed to clear auth session', error);
+        await RNFS.writeFile(REMEMBER_ME_PATH, JSON.stringify({ email: email.trim().toLowerCase() }), 'utf8');
+    } catch {
+        console.warn('Failed to persist remembered email preference');
     }
 };
 
-export const saveRememberedEmail = async (email: string) => {
-    try {
-        await RNFS.writeFile(REMEMBER_ME_PATH, JSON.stringify({ email }), 'utf8');
-    } catch (error) {
-        console.error('Failed to save remembered email', error);
-    }
-};
-
-export const loadRememberedEmail = async () => {
+export const loadRememberedEmail = async (): Promise<string | null> => {
     try {
         if (await RNFS.exists(REMEMBER_ME_PATH)) {
             const content = await RNFS.readFile(REMEMBER_ME_PATH, 'utf8');
             const data = JSON.parse(content);
             return data.email || null;
         }
-    } catch (error) {
-        console.error('Failed to load remembered email', error);
+    } catch {
+        console.warn('Failed to load remembered email preference');
     }
     return null;
 };
 
-export const clearRememberedEmail = async () => {
+export const clearRememberedEmail = async (): Promise<void> => {
     try {
         if (await RNFS.exists(REMEMBER_ME_PATH)) {
             await RNFS.unlink(REMEMBER_ME_PATH);
         }
-    } catch (error) {
-        console.error('Failed to clear remembered email', error);
+    } catch {
+        console.warn('Failed to clear remembered email preference');
     }
 };

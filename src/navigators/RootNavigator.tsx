@@ -1,19 +1,24 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer, createNavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { RootState, AppDispatch } from '../redux/store';
 import { checkAuth } from '../redux/authSlice';
-import { MentorStudentListScreen } from '@screens';
 
-import StudentNavigator from './StudentNavigator';
+import MainTabNavigator from './MainTabNavigator';
+import MentorTabNavigator from './MentorTabNavigator';
 import MentorNavigator from './MentorNavigator';
 import { AUTH_ROUTES, COMMON_STACK_ROUTES, ADMIN_STACK_ROUTES } from './routes';
-import { Loading, IconButton } from '@/components';
+import { Loading, IconButton, AdminImpersonationBanner } from '@/components';
 import { BootSplash } from '@/components/shared/BootSplash';
+import { OnboardingScreen, RoleSelectionScreen } from '../screens';
+import { getUserPreferences, getSavedLanguage } from '../utils/userPreferences';
+import { setAppLanguage } from '../redux/roadmapSlice';
+import { useAppLanguage, detectDeviceLanguage } from '../utils/i18n';
 
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -32,67 +37,138 @@ const AuthStack = () => (
 );
 
 const AuthenticatedStack = () => {
-    const { user } = useSelector((state: RootState) => state.auth);
+    const { user, adminOriginalUser } = useSelector((state: RootState) => state.auth);
+    const { t } = useAppLanguage();
+    const [initialRoute, setInitialRoute] = useState<string | null>(null);
+
+    const isAdmin = user?.role === 'admin' || adminOriginalUser?.role === 'admin';
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkFlow = async () => {
+            const userId = user?.id || (user as any)?.sub;
+            if (!userId) {
+                if (isMounted) setInitialRoute('MainTab');
+                return;
+            }
+
+            // Direct admin login opens account selection screen
+            if (user?.role === 'admin') {
+                if (isMounted) setInitialRoute('AdminAccountSelection');
+                return;
+            }
+
+            try {
+                const prefs = await getUserPreferences(userId);
+                if (!prefs.onboardingCompleted) {
+                    if (isMounted) setInitialRoute('Onboarding');
+                } else if (!prefs.roleSelected && !user?.role) {
+                    if (isMounted) setInitialRoute('RoleSelection');
+                } else if (user?.role === 'mentor') {
+                    if (isMounted) setInitialRoute('MentorTab');
+                } else {
+                    if (isMounted) setInitialRoute('MainTab');
+                }
+            } catch (err) {
+                console.error('Failed to check user flow preferences:', err);
+                if (isMounted) {
+                    setInitialRoute(user?.role === 'mentor' ? 'MentorTab' : 'MainTab');
+                }
+            }
+        };
+
+        checkFlow();
+        return () => {
+            isMounted = false;
+        };
+    }, [user]);
+
+    if (!initialRoute) {
+        return <Loading visible={true} />;
+    }
+
+    const getScreenTitle = (routeName: string) => {
+        switch (routeName) {
+            case 'JoinMentor': return t('student.joinTitle');
+            case 'MentorRequests': return t('nav.requests');
+            case 'Profile': return t('nav.profile');
+            case 'ProfileSettings': return t('nav.profile');
+            case 'ExamSelection': return t('roadmap.selectGoalTitle');
+            case 'Roadmap': return t('roadmap.viewRoadmap');
+            case 'MentorStudents': return t('mentor.managementTitle');
+            default: return undefined;
+        }
+    };
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {/* Role Based Screens */}
-            {user?.role === 'admin' ? (
-                <>
-                    {ADMIN_STACK_ROUTES.map((route) => (
+        <View style={{ flex: 1 }}>
+            <Stack.Navigator
+                key={`${user?.role || 'default'}-${adminOriginalUser ? 'impersonating' : 'direct'}`}
+                initialRouteName={initialRoute}
+                screenOptions={{ headerShown: false }}
+            >
+                {/* Student Experience */}
+                <Stack.Screen name="MainTab" component={MainTabNavigator} />
+
+                {/* Mentor Experience */}
+                <Stack.Screen name="MentorTab" component={MentorTabNavigator} />
+
+                {/* Onboarding & Role Selection */}
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+
+                {/* Admin Screens (Only rendered if admin or during admin session) */}
+                {isAdmin && (
+                    ADMIN_STACK_ROUTES.map((route) => (
                         <Stack.Screen
                             key={route.name}
                             name={route.name}
                             component={route.component}
                             options={route.options}
                         />
-                    ))}
-                    <Stack.Screen name="StudentHome" component={StudentNavigator} />
-                    <Stack.Screen
-                        name="MentorHome"
-                        component={MentorStudentListScreen}
-                        options={{ headerShown: true, title: 'My Students' }}
-                    />
-                </>
-            ) : user?.role === 'student' ? (
-                <Stack.Screen name="StudentHome" component={StudentNavigator} />
-            ) : (
-                <Stack.Screen
-                    name="MentorHome"
-                    component={MentorStudentListScreen}
-                    options={{ headerShown: true, title: 'My Students' }}
-                />
-            )}
+                    ))
+                )}
 
-            {/* Common Screens */}
-            {COMMON_STACK_ROUTES.map((route) => (
-                <Stack.Screen
-                    key={route.name}
-                    name={route.name}
-                    component={route.component}
-                    options={route.options}
-                />
-            ))}
+                {/* Common Screens (Profile Settings, Join Mentor, etc) */}
+                {COMMON_STACK_ROUTES.filter((r) => r.name !== 'Onboarding' && r.name !== 'RoleSelection').map((route) => {
+                    const dynamicTitle = getScreenTitle(route.name);
+                    const mergedOptions = dynamicTitle
+                        ? { ...route.options, title: dynamicTitle }
+                        : route.options;
 
-            {/* Shared Nested Navigators */}
-            <Stack.Screen
-                name="MentorDashboard"
-                component={MentorNavigator}
-                options={({ route, navigation }: any) => ({
-                    headerShown: true,
-                    title: route.params?.student?.name || 'Dashboard',
-                    headerLeft: () => (
-                        <IconButton
-                            icon="account-group"
-                            size={24}
-                            iconColor="#007AFF"
-                            onPress={() => navigation.goBack()}
-                            style={{ marginLeft: 6 }}
+                    return (
+                        <Stack.Screen
+                            key={route.name}
+                            name={route.name}
+                            component={route.component}
+                            options={mergedOptions}
                         />
-                    ),
+                    );
                 })}
-            />
-        </Stack.Navigator>
+
+                {/* Legacy Mentor Screens - moved here for Profile -> More access */}
+                <Stack.Screen
+                    name="MentorDashboard"
+                    component={MentorNavigator}
+                    options={({ route, navigation }: any) => ({
+                        headerShown: true,
+                        title: route.params?.student?.name || 'Dashboard',
+                        headerLeft: () => (
+                            <IconButton
+                                icon="account-group"
+                                size={24}
+                                iconColor="#007AFF"
+                                onPress={() => navigation.goBack()}
+                                style={{ marginLeft: 6 }}
+                            />
+                        ),
+                    })}
+                />
+            </Stack.Navigator>
+
+            {/* Admin Impersonation Indicator Banner */}
+            {adminOriginalUser && <AdminImpersonationBanner />}
+        </View>
     );
 };
 
@@ -104,6 +180,13 @@ const RootNavigator = () => {
     const onAnimationEnd = () => setVisible(false);
     useEffect(() => {
         dispatch(checkAuth());
+        getSavedLanguage().then((saved) => {
+            if (saved) {
+                dispatch(setAppLanguage(saved));
+            } else {
+                dispatch(setAppLanguage(detectDeviceLanguage()));
+            }
+        });
     }, [dispatch]);
 
     useEffect(() => {

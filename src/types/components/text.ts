@@ -1,4 +1,4 @@
-import { TextProps, TextStyle } from 'react-native';
+import { TextProps, TextStyle, StyleProp } from 'react-native';
 
 import { ISpacing } from '../theme';
 import { ThemeFonts } from '@/types/theme';
@@ -191,5 +191,5 @@ export interface ITextProps extends TextProps, ISpacing {
      * Renders the Text component with custom style, overwrite existing/predefined styles
      * @see https://reactnative.dev/docs/text#style
      */
-    style?: TextStyle;
+    style?: StyleProp<TextStyle>;
 }

@@ -34,10 +34,10 @@ type Props = IconProps & {
     color?: string;
     isText?: boolean;
     source: any;
-    style?: ViewStyle;
+    style?: any;
 };
 
-function Icon({ source, color, size = 22, isText = false, ...rest }: Props) {
+function Icon({ source, color, size = 22, isText = false, style, ...rest }: Props) {
     const { colors } = useTheme();
     const direction =
         typeof source === 'object' && source.direction && source.source
@@ -70,7 +70,8 @@ function Icon({ source, color, size = 22, isText = false, ...rest }: Props) {
                         tintColor: color,
                         resizeMode: 'contain',
                     },
-                ]}
+                    style,
+                ] as any}
                 {...accessibilityProps}
                 {...rest}
             />
@@ -79,7 +80,7 @@ function Icon({ source, color, size = 22, isText = false, ...rest }: Props) {
     if (isText) {
         return (
             <Block align="center" justify="center">
-                <Text color={iconColor} marginTop={size / 2} size={size}>
+                <Text color={iconColor as any} marginTop={size / 2} size={size}>
                     {s}
                 </Text>
             </Block>
@@ -89,7 +90,7 @@ function Icon({ source, color, size = 22, isText = false, ...rest }: Props) {
         return (
             <MaterialCommunityIcon
                 name={s}
-                color={iconColor}
+                color={iconColor as string}
                 size={size}
                 direction={direction}
             />

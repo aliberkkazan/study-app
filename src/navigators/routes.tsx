@@ -8,13 +8,17 @@ import {
     ReviewTestScreen,
     StudentSubmissionsScreen,
     UploadTestScreen,
-    MentorStudentListScreen,
     MentorProgramListScreen,
     RoleSelectionScreen,
     ProfileScreen,
     JoinMentorScreen,
     MentorRequestsScreen,
-    ProfileSettings
+    ProfileSettings,
+    ExamSelectionScreen,
+    RoadmapScreen,
+    MentorStudentsScreen,
+    OnboardingScreen,
+    AdminAccountSelectionScreen,
 } from '@screens';
 import { ProfileSettingsHeader } from '../components';
 import React from 'react';
@@ -47,6 +51,8 @@ export const AUTH_ROUTES: RouteConfig[] = [
 ];
 
 export const COMMON_STACK_ROUTES: RouteConfig[] = [
+    { name: 'Onboarding', component: OnboardingScreen, options: { headerShown: false } },
+    { name: 'RoleSelection', component: RoleSelectionScreen, options: { headerShown: false } },
     { name: 'JoinMentor', component: JoinMentorScreen, options: { headerShown: true, title: 'Join Mentor' } },
     { name: 'MentorRequests', component: MentorRequestsScreen, options: { headerShown: true, title: 'Requests' } },
     { name: 'Profile', component: ProfileScreen, options: { headerShown: true, title: 'Profile', headerRight: () => <ProfileSettingsHeader /> } },
@@ -58,9 +64,32 @@ export const COMMON_STACK_ROUTES: RouteConfig[] = [
             title: 'Profile Settings'
         }
     },
+    {
+        name: 'ExamSelection',
+        component: ExamSelectionScreen,
+        options: {
+            headerShown: true,
+            title: 'Exam & Target Selection',
+        },
+    },
+    {
+        name: 'Roadmap',
+        component: RoadmapScreen,
+        options: {
+            headerShown: true,
+            title: 'Study Roadmap',
+        },
+    },
+    {
+        name: 'MentorStudents',
+        component: MentorStudentsScreen,
+        options: {
+            headerShown: true,
+            title: 'My Students',
+        },
+    },
 ];
 
 export const ADMIN_STACK_ROUTES: RouteConfig[] = [
-    { name: 'RoleSelection', component: RoleSelectionScreen },
-    // StudentHome and MentorHome are handled specially in RootNavigator due to their navigator components
+    { name: 'AdminAccountSelection', component: AdminAccountSelectionScreen, options: { headerShown: false } },
 ];

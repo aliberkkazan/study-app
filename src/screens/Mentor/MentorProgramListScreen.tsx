@@ -11,14 +11,15 @@ import { lightTheme } from '../../theme/theme';
 const MentorProgramListScreen = ({ navigation, route }: any) => {
     const { student } = route.params;
     const { program: programs, loading } = useSelector((state: RootState) => state.data);
+    const user = useSelector((state: RootState) => state.auth.user);
     const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
-        dispatch(fetchPrograms());
-    }, [dispatch]);
+        dispatch(fetchPrograms({ studentId: student.id }));
+    }, [dispatch, student.id]);
 
     const studentPrograms = programs
-        .filter(p => p.student.id === student.id)
+        .filter(p => p.student?.id === student.id && (!p.mentor || p.mentor.id === user?.id))
         .sort((a, b) => {
             // Sort by scheduledDate desc, then title
             if (a.scheduledDate && b.scheduledDate) return b.scheduledDate.localeCompare(a.scheduledDate);
@@ -45,7 +46,7 @@ const MentorProgramListScreen = ({ navigation, route }: any) => {
                     )}
                     contentContainerStyle={{ paddingBottom: 20 }}
                     refreshing={loading}
-                    onRefresh={() => dispatch(fetchPrograms())}
+                    onRefresh={() => dispatch(fetchPrograms({ studentId: student.id }))}
                 />
         </View>
         </>

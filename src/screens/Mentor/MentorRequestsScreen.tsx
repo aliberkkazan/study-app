@@ -9,8 +9,10 @@ import {
 import {lightTheme} from '../../theme/theme';
 import {MentorRequestCard} from './components';
 import {Loading} from '@/components';
+import {useAppLanguage} from '../../utils/i18n';
 
 export const MentorRequestsScreen = () => {
+  const {t} = useAppLanguage();
   const dispatch = useDispatch<AppDispatch>();
   const {connectionRequests, loading} = useSelector(
     (state: RootState) => state.data,
@@ -44,7 +46,7 @@ export const MentorRequestsScreen = () => {
           )}
           keyExtractor={item => item.id}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No pending requests.</Text>
+            <Text style={styles.emptyText}>{t('mentor.noRequests')}</Text>
           }
           refreshControl={
             <RefreshControl

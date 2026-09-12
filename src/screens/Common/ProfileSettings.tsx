@@ -5,35 +5,47 @@ import { useTheme } from '@/theme';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import { deleteAccount } from '@/redux/authSlice';
+import { useAppLanguage } from '../../utils/i18n';
 
 const ProfileSettings = () => {
+    const { t } = useAppLanguage();
     const dispatch = useDispatch<AppDispatch>();
     const { colors } = useTheme();
 
     const handleDeleteAccount = () => {
         Alert.alert(
-            'Confirm Deletion',
-            'Are you sure you want to delete your account? This action cannot be undone.',
+            t('profile.confirmDeletion'),
+            t('profile.confirmDeletionMsg'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Delete',
+                    text: t('profile.delete'),
                     style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            const resultAction = await dispatch(deleteAccount());
-                            if (deleteAccount.fulfilled.match(resultAction)) {
-                                console.log('Account deleted successfully');
-                            } else {
-                                if (resultAction.payload) {
-                                    console.log('Delete failed:', resultAction.payload);
-                                } else {
-                                    console.log('Delete failed with error:', resultAction.error);
-                                }
-                            }
-                        } catch (err) {
-                            console.log('Dispatch error:', err);
-                        }
+                    onPress: () => {
+                        // Second confirmation step for destructive action
+                        Alert.alert(
+                            t('profile.deleteAccount'),
+                            'This action is permanent and cannot be undone. All your study data, sessions, and connections will be wiped.',
+                            [
+                                { text: t('common.cancel'), style: 'cancel' },
+                                {
+                                    text: t('profile.delete'),
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            const resultAction = await dispatch(deleteAccount());
+                                            if (deleteAccount.fulfilled.match(resultAction)) {
+                                                console.log('Account deleted successfully');
+                                            } else {
+                                                console.warn('Account deletion rejected by server');
+                                            }
+                                        } catch {
+                                            console.warn('Account deletion request failed');
+                                        }
+                                    },
+                                },
+                            ]
+                        );
                     },
                 },
             ],
@@ -44,7 +56,7 @@ const ProfileSettings = () => {
         <Block padding={20}>
             <List.Item
                 onPress={() => { handleDeleteAccount(); }}
-                title="Delete my Account"
+                title={t('profile.deleteAccount')}
                 titleStyle={styles.menuItemText}
                 left={props => (
                     <List.ListIcon

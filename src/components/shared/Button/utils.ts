@@ -16,7 +16,8 @@ type BaseProps = {
     isMode: (mode: ButtonMode) => boolean;
     theme: any;
     disabled?: boolean;
-    backgroundColor: string;
+    backgroundColor?: string;
+    variant?: string;
 };
 
 const isDark = ({
