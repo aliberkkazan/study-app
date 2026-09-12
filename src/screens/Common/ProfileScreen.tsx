@@ -44,9 +44,6 @@ const ProfileScreen = () => {
     (state: RootState) => state.data
   );
   const {
-    selectedExam,
-    targetTrack,
-    targetScore,
     streakDays,
     weeklyAvailabilityHours,
   } = useSelector((state: RootState) => state.roadmap);
@@ -212,12 +209,6 @@ const ProfileScreen = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
-  const examLabel =
-    selectedExam === 'yks'
-      ? `YKS (${targetTrack ? targetTrack.toUpperCase() : t('profile.noTrack')})`
-      : selectedExam === 'sat'
-        ? `Digital SAT (${targetTrack ? targetTrack.toUpperCase() : t('profile.general')})`
-        : t('profile.freeStudy');
 
   const roleLabel =
     displayedUser?.role === 'mentor'
@@ -259,11 +250,6 @@ const ProfileScreen = () => {
                 style={{ marginRight: 4 }}
               />
               <Text style={styles.roleChipText}>{roleLabel}</Text>
-            </View>
-
-            <View style={styles.examChip}>
-              <Ionicons name="sparkles" size={13} color="#0369A1" style={{ marginRight: 4 }} />
-              <Text style={styles.examChipText}>{examLabel}</Text>
             </View>
           </View>
         </View>
@@ -687,21 +673,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#4338CA',
-  },
-  examChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F9FF',
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  examChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0369A1',
   },
 
   // STATS ROW
